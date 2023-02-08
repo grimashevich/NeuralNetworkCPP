@@ -1,7 +1,7 @@
 #include <cfloat>
 #include "NN.cpp"
 #include <chrono>
-#include "cmake-build-debug/TrainingSet.h"
+#include "TrainingSet.h"
 
 void AddItemToTrainSet(double x, double y, double answer, std::vector<std::vector<double>> &inputs, std::vector<std::vector<double>> &targets)
 {
