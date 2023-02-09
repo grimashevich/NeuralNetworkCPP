@@ -1,11 +1,13 @@
 #include "TrainingSet.h"
+#include "StopWatch.h"
 
 TrainingSet::TrainingSet(int inputSize, int answerSize)
 {
 	this->inputSize = inputSize;
 	this->answerSize = answerSize;
 	answerOffset = 0;
-
+	testSetSizePerc = 0;
+	std::srand(std::time(nullptr));
 }
 
 size_t TrainingSet::Size()
@@ -60,6 +62,7 @@ std::vector<double> TrainingSet::GetVectorAnswer(int rightClassNum) const
 
 void TrainingSet::MoveToTestSet(float movePercentage)
 {
+	testSetSizePerc = movePercentage;
 	int countToMove = (int)((float) answers.size() * movePercentage);
 	if (movePercentage >= 1.0)
 		countToMove = (int) answers.size();
@@ -70,6 +73,14 @@ void TrainingSet::MoveToTestSet(float movePercentage)
 		testSetAnswers.push_back(answers[answers.size() - 1]);
 		answers.pop_back();
 	}
+
+/*	for (int i = 0; i < countToMove; ++i)
+	{
+		testSetInputSignals.push_back(inputSignals[i]);
+		testSetAnswers.push_back(answers[i]);
+	}
+	inputSignals.erase(inputSignals.begin(), inputSignals.begin() + countToMove);
+	answers.erase(answers.begin(), answers.begin() + countToMove);*/
 }
 
 double TrainingSet::normalizeInput(double n, double limit)
@@ -77,4 +88,42 @@ double TrainingSet::normalizeInput(double n, double limit)
 	if (n >= limit)
 		return 1;
 	return 0;
+}
+
+
+
+void TrainingSet::Shuffle()
+{
+	//auto sw = StopWatch();
+	//sw.Start();
+	ReturnTestSetToTrainSet();
+
+	//std::cout <<  sw.Restart() << " return complete" << std::endl;
+
+	size_t setSize, rnd1, rnd2;
+	setSize = inputSignals.size();
+	for (size_t i = 0; i < setSize * 2; ++i)
+	{
+		rnd1 = rand() % setSize;
+		rnd2 = rand() % setSize;
+		inputSignals[rnd1].swap(inputSignals[rnd2]);
+		answers[rnd1].swap(answers[rnd2]);
+	}
+
+	//std::cout <<  sw.Restart() << " shuffle complete" << std::endl;
+
+	MoveToTestSet(testSetSizePerc);
+
+	//std::cout <<  sw.Restart() << " move to test set complete" << std::endl;
+}
+
+void TrainingSet::ReturnTestSetToTrainSet()
+{
+	for (size_t i = 0; i < testSetInputSignals.size(); ++i)
+	{
+		inputSignals.push_back(testSetInputSignals[i]);
+		answers.push_back(testSetAnswers[i]);
+	}
+	testSetInputSignals.clear();
+	testSetAnswers.clear();
 }

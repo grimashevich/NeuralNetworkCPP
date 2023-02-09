@@ -116,7 +116,7 @@ private:
     }
 
     void update_biases(const std::vector<std::vector<double>> &errors) {
-        double learning_rate = 0.1;
+        double learning_rate = 0.02;
         for (int i = 0; i < biases.size(); i++) {
             for (int j = 0; j < biases[i].size(); j++) {
                 double delta = -learning_rate * errors[i + 1][j];

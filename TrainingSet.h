@@ -6,23 +6,32 @@
 #include <sstream>
 #include <fstream>
 #include <string>
+#include <algorithm>
+#include <random>
 
 class TrainingSet {
 public:
-	explicit TrainingSet(int inputSize, int answerSize);
-	size_t Size();
-	void LoadFromCSV(std::string& filePath, char delimiter, int lineLimit = 0, bool skipFirstLine = true);
-	void MoveToTestSet(float movePercentage);
-	int answerOffset; // Смещение класса ответов в выборке (-1, если для 0-го класса в выборке ответ 1)
 	std::vector<std::vector<double>> inputSignals;
 	std::vector<std::vector<double>> answers;
 	std::vector<std::vector<double>> testSetInputSignals;
 	std::vector<std::vector<double>> testSetAnswers;
+
+	explicit TrainingSet(int inputSize, int answerSize);
+	size_t Size();
+	void LoadFromCSV(std::string& filePath, char delimiter, int lineLimit = 0, bool skipFirstLine = true);
+	void MoveToTestSet(float movePercentage);
+	void ReturnTestSetToTrainSet();
+	int answerOffset; // Смещение класса ответов в выборке (-1, если для 0-го класса в выборке ответ 1)
+	void Shuffle();
 private:
 	int inputSize;
 	int answerSize;
+	float testSetSizePerc;
+
 	[[nodiscard]] std::vector<double> GetVectorAnswer(int rightClassNum) const;
 	static double normalizeInput(double n, double limit);
+
+
 };
 
 

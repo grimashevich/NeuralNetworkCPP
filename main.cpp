@@ -99,7 +99,6 @@ double CheckTestSet(std::vector<std::vector<double>>& TestInputs, std::vector<st
 
 void SyntheticTest()
 {
-	srand(std::time(nullptr));
 	std::vector<std::vector<double>> inputs = std::vector<std::vector<double>>();
 	std::vector<std::vector<double>> targets = std::vector<std::vector<double>>();
 
@@ -125,6 +124,7 @@ void SyntheticTest()
 
 int main()
 {
+	srand(std::time(nullptr));
 	//SyntheticTest();
 
 	TrainingSet ts = TrainingSet(784, 26);
@@ -134,10 +134,13 @@ int main()
 	ts.answerOffset = -1;
 	ts.LoadFromCSV(fileName, ',', 0, false);
 	std::cout << swLoadSet.Restart() << " data set loaded" << std::endl;
+
 	//std::this_thread::sleep_for(std::chrono::milliseconds(20000));
-	ts.MoveToTestSet(0.2);
+
+	ts.MoveToTestSet(0.1);
 	std::cout << swLoadSet.Restart() << " move complete" << std::endl;
-	std::vector<int> topology = { 784, 200, 100, 50, 26 };
+
+	std::vector<int> topology = { 784, 100, 50, 26 };
 	NeuralNetwork nn = NeuralNetwork(topology);
 	std::cout << swLoadSet.Stop() << " NN init complete" << std::endl;
 	std::cout << "BEFORE Learning:" << std::endl;
@@ -149,6 +152,7 @@ int main()
 		nn.train(ts.inputSignals, ts.answers, 1);
 		std::cout << "epoch " << i << " done in " << swLoadSet.Stop() << " ";
 		CheckTestSet(ts.testSetInputSignals, ts.testSetAnswers, nn);
+		ts.Shuffle();
 	}
 
 }
