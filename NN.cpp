@@ -17,6 +17,7 @@ public:
         }
         init_weights();
         init_biases();
+		learningRate = 0.02;
     }
 
     void train(const std::vector<std::vector<double>>& inputs, const std::vector<std::vector<double>>& targets, int num_epochs) {
@@ -48,7 +49,22 @@ private:
     std::vector<std::vector<double>> layers;
     std::vector<std::vector<std::vector<double>>> weights;
     std::vector<std::vector<double>> biases;
-    std::mt19937 generator;
+	double learningRate;
+public:
+	[[nodiscard]] double getLearningRate() const
+	{
+		return learningRate;
+	}
+
+	void setLearningRate(double newLearningRate)
+	{
+		if (learningRate <= 0)
+			return;
+		learningRate = newLearningRate;
+	}
+
+private:
+	std::mt19937 generator;
 
     void init_weights() {
         std::normal_distribution<double> distribution(0, 1);
@@ -104,11 +120,10 @@ private:
     }
 
     void update_weights(const std::vector<std::vector<double>> &errors, const std::vector<std::vector<double>> &activations) {
-        double learning_rate = 0.02;
         for (int i = 0; i < weights.size(); i++) {
             for (int j = 0; j < weights[i].size(); j++) {
                 for (int k = 0; k < weights[i][j].size(); k++) {
-                    double delta = -learning_rate * errors[i + 1][j] * activations[i][k];
+                    double delta = -learningRate * errors[i + 1][j] * activations[i][k];
                     weights[i][j][k] += delta;
                 }
             }
@@ -116,10 +131,9 @@ private:
     }
 
     void update_biases(const std::vector<std::vector<double>> &errors) {
-        double learning_rate = 0.02;
         for (int i = 0; i < biases.size(); i++) {
             for (int j = 0; j < biases[i].size(); j++) {
-                double delta = -learning_rate * errors[i + 1][j];
+                double delta = -learningRate * errors[i + 1][j];
                 biases[i][j] += delta;
             }
         }
