@@ -3,6 +3,7 @@
 #include <chrono>
 #include "TrainingSet.h"
 #include "StopWatch.h"
+#include <thread>
 
 void AddItemToTrainSet(double x, double y, double answer, std::vector<std::vector<double>> &inputs, std::vector<std::vector<double>> &targets)
 {
@@ -76,7 +77,7 @@ int getIndexOfMaxEl(std::vector<double> vect)
 	return curIndex;
 }
 
-void CheckTestSet(std::vector<std::vector<double>>& TestInputs, std::vector<std::vector<double>>& TestTargets, NeuralNetwork &nn)
+double CheckTestSet(std::vector<std::vector<double>>& TestInputs, std::vector<std::vector<double>>& TestTargets, NeuralNetwork &nn)
 {
 	int rightCount = 0;
 	int wrongCount = 0;
@@ -89,7 +90,10 @@ void CheckTestSet(std::vector<std::vector<double>>& TestInputs, std::vector<std:
 		else
 			wrongCount++;
 	}
-	std::cout << "right: " << rightCount << " wrong: " << wrongCount << " (" << (rightCount / (double) TestInputs.size()) * 100 << "%)" << std::endl;
+	//std::cout << "right: " << rightCount << " wrong: " << wrongCount << " (" << (rightCount / (double) TestInputs.size()) * 100 << "%)" << std::endl;
+	double result = (rightCount / (double) TestInputs.size()) * 100;
+	std::cout << result << "%" << std::endl;
+	return result;
 }
 
 
@@ -104,7 +108,7 @@ void SyntheticTest()
 
 	GenerateTrainSet(inputs, targets, 1000, false);
 	GenerateTrainSet(TestInputs, TestTargets, 1000, 100);
-S
+
 	std::vector<int> topology = { 2, 12, 6, 4 };
 	NeuralNetwork nn = NeuralNetwork(topology);
 	nn.train(inputs, targets, 1);
@@ -123,35 +127,28 @@ int main()
 {
 	//SyntheticTest();
 
-	auto sp = StopWatch();
-	sp.Start();
-	bool a;
-	for (long i = 0; i < 80000 * 784; ++i)
-	{
-		if (i % 53 > 14)
-			a = true;
-		else
-			a = false;
-		(void) a;
-	}
-	std::cout << sp.Stop() << std::endl;
-	return 0;
-
 	TrainingSet ts = TrainingSet(784, 26);
+	StopWatch swLoadSet = StopWatch();
+	swLoadSet.Start();
 	std::string fileName = std::string("/Users/eclown/Desktop/projects/NN/emnist-letters-train.csv");
 	ts.answerOffset = -1;
-	ts.LoadFromCSV(fileName, ',', 1000);
-	std::cout << "train set load ok " << std::endl;
+	ts.LoadFromCSV(fileName, ',', 0, false);
+	std::cout << swLoadSet.Restart() << " data set loaded" << std::endl;
+	//std::this_thread::sleep_for(std::chrono::milliseconds(20000));
 	ts.MoveToTestSet(0.2);
-	std::cout << "train set split ok"  << std::endl;
+	std::cout << swLoadSet.Restart() << " move complete" << std::endl;
 	std::vector<int> topology = { 784, 100, 50, 26 };
 	NeuralNetwork nn = NeuralNetwork(topology);
+	std::cout << swLoadSet.Stop() << " NN init complete" << std::endl;
+	std::cout << "BEFORE Learning:" << std::endl;
 	CheckTestSet(ts.testSetInputSignals, ts.testSetAnswers, nn);
-	auto start = std::chrono::high_resolution_clock::now();
-	nn.train(ts.inputSignals, ts.answers, 1);
-	auto end = std::chrono::high_resolution_clock::now();
-	auto duration = std::chrono::duration_cast<std::chrono::seconds>(end - start);
-	std::cout << "learning time " << duration.count() << " seconds" << std::endl;
-	CheckTestSet(ts.testSetInputSignals, ts.testSetAnswers, nn);
+	std::cout << std::endl;
+	for (int i = 0; i < 50; ++i)
+	{
+		swLoadSet.Start();
+		nn.train(ts.inputSignals, ts.answers, 1);
+		std::cout << "epoch " << i << " done in " << swLoadSet.Stop() << " ";
+		CheckTestSet(ts.testSetInputSignals, ts.testSetAnswers, nn);
+	}
 
 }

@@ -21,16 +21,12 @@ public:
 
     void train(const std::vector<std::vector<double>>& inputs, const std::vector<std::vector<double>>& targets, int num_epochs) {
         for (int e = 0; e < num_epochs; e++) {
-			auto start = std::chrono::high_resolution_clock::now();
             for (int i = 0; i < inputs.size(); i++) {
                 std::vector<std::vector<double>> activations = feedforward(inputs[i]);
                 std::vector<std::vector<double>> errors = backprop(activations, targets[i]);
                 update_weights(errors, activations);
                 update_biases(errors);
             }
-			auto end = std::chrono::high_resolution_clock::now();
-			auto duration = std::chrono::duration_cast<std::chrono::seconds>(end - start);
-			std::cout << "epoch # " << e + 1 << " complete (" << duration.count() << " sec.)" << std::endl;
         }
     }
 

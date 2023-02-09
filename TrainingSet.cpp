@@ -69,7 +69,7 @@ void TrainingSet::MoveToTestSet(float movePercentage)
 		inputSignals.pop_back();
 		testSetAnswers.push_back(answers[answers.size() - 1]);
 		answers.pop_back();
-	}s
+	}
 }
 
 double TrainingSet::normalizeInput(double n, double limit)

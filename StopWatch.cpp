@@ -22,13 +22,13 @@ std::string StopWatch::Stop()
 	if (duration > 1000000)
 	{
 		result = static_cast<double>(static_cast<double>(duration) / 1000000.0);
-		std::round(result / 0.001) * 0.001;
-		units = "sec.";
+		result = std::round(result / 0.001) * 0.001;
+		units = "s";
 	}
 	else if (duration > 1000)
 	{
 		result = static_cast<double>(static_cast<double>(duration) / 1000.0);
-		std::round(result / 0.001) * 0.001;
+		result = std::round(result / 0.001) * 0.001;
 		units = "ms";
 	}
 	else
@@ -37,11 +37,18 @@ std::string StopWatch::Stop()
 		units = "microseconds.";
 	}
 
-	strResult << result << " " << units;
+	strResult << result << units;
 	return strResult.str();
 }
 
 long long int StopWatch::getDuration() const
 {
 	return duration;
+}
+
+std::string StopWatch::Restart()
+{
+	std::string tmp = Stop();
+	Start();
+	return tmp;
 }

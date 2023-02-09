@@ -19,6 +19,7 @@ public:
 	StopWatch();
 	void Start();
 	std::string Stop();
+	std::string Restart();
 
 };
 
