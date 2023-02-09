@@ -146,6 +146,7 @@ int main()
 	std::cout << "BEFORE Learning:" << std::endl;
 	CheckTestSet(ts.testSetInputSignals, ts.testSetAnswers, nn);
 	std::cout << std::endl;
+	double learningRateRatio = 0.7;
 	for (int i = 0; i < 50; ++i)
 	{
 		swLoadSet.Start();
@@ -153,6 +154,7 @@ int main()
 		std::cout << "epoch " << i << " done in " << swLoadSet.Stop() << " ";
 		CheckTestSet(ts.testSetInputSignals, ts.testSetAnswers, nn);
 		ts.Shuffle();
+		nn.setLearningRate(nn.getLearningRate() * learningRateRatio);
 	}
 
 }
