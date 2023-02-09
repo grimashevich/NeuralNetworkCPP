@@ -2,6 +2,7 @@
 #include "NN.cpp"
 #include <chrono>
 #include "TrainingSet.h"
+#include "StopWatch.h"
 
 void AddItemToTrainSet(double x, double y, double answer, std::vector<std::vector<double>> &inputs, std::vector<std::vector<double>> &targets)
 {
@@ -92,9 +93,8 @@ void CheckTestSet(std::vector<std::vector<double>>& TestInputs, std::vector<std:
 }
 
 
-void SynteticTest()
+void SyntheticTest()
 {
-
 	srand(std::time(nullptr));
 	std::vector<std::vector<double>> inputs = std::vector<std::vector<double>>();
 	std::vector<std::vector<double>> targets = std::vector<std::vector<double>>();
@@ -102,9 +102,9 @@ void SynteticTest()
 	std::vector<std::vector<double>> TestInputs = std::vector<std::vector<double>>();
 	std::vector<std::vector<double>> TestTargets = std::vector<std::vector<double>>();
 
-	GenerateTrainSet(inputs, targets, 1000);
+	GenerateTrainSet(inputs, targets, 1000, false);
 	GenerateTrainSet(TestInputs, TestTargets, 1000, 100);
-
+S
 	std::vector<int> topology = { 2, 12, 6, 4 };
 	NeuralNetwork nn = NeuralNetwork(topology);
 	nn.train(inputs, targets, 1);
@@ -121,9 +121,21 @@ void SynteticTest()
 
 int main()
 {
-	//SynteticTest();
+	//SyntheticTest();
 
-
+	auto sp = StopWatch();
+	sp.Start();
+	bool a;
+	for (long i = 0; i < 80000 * 784; ++i)
+	{
+		if (i % 53 > 14)
+			a = true;
+		else
+			a = false;
+		(void) a;
+	}
+	std::cout << sp.Stop() << std::endl;
+	return 0;
 
 	TrainingSet ts = TrainingSet(784, 26);
 	std::string fileName = std::string("/Users/eclown/Desktop/projects/NN/emnist-letters-train.csv");
@@ -137,19 +149,6 @@ int main()
 	CheckTestSet(ts.testSetInputSignals, ts.testSetAnswers, nn);
 	auto start = std::chrono::high_resolution_clock::now();
 	nn.train(ts.inputSignals, ts.answers, 1);
-	CheckTestSet(ts.testSetInputSignals, ts.testSetAnswers, nn);
-	nn.train(ts.inputSignals, ts.answers, 1);
-	CheckTestSet(ts.testSetInputSignals, ts.testSetAnswers, nn);
-	nn.train(ts.inputSignals, ts.answers, 1);
-	CheckTestSet(ts.testSetInputSignals, ts.testSetAnswers, nn);
-	nn.train(ts.inputSignals, ts.answers, 1);
-	CheckTestSet(ts.testSetInputSignals, ts.testSetAnswers, nn);
-	nn.train(ts.inputSignals, ts.answers, 1);
-	CheckTestSet(ts.testSetInputSignals, ts.testSetAnswers, nn);
-	nn.train(ts.inputSignals, ts.answers, 1);
-	CheckTestSet(ts.testSetInputSignals, ts.testSetAnswers, nn);
-	nn.train(ts.inputSignals, ts.answers, 1);
-	CheckTestSet(ts.testSetInputSignals, ts.testSetAnswers, nn);
 	auto end = std::chrono::high_resolution_clock::now();
 	auto duration = std::chrono::duration_cast<std::chrono::seconds>(end - start);
 	std::cout << "learning time " << duration.count() << " seconds" << std::endl;

@@ -13,7 +13,7 @@ size_t TrainingSet::Size()
 	return inputSignals.size();
 }
 
-void TrainingSet::LoadFromCSV(std::string& filePath, char delimiter, int lineLimit)
+void TrainingSet::LoadFromCSV(std::string& filePath, char delimiter, int lineLimit, bool skipFirstLine)
 {
 	//TODO Check is file exist and readable
 	std::ifstream csvFile(filePath);
@@ -23,7 +23,8 @@ void TrainingSet::LoadFromCSV(std::string& filePath, char delimiter, int lineLim
 	inputSignals.clear();
 	answers.clear();
 
-	getline(csvFile, line);
+	if (skipFirstLine)
+		getline(csvFile, line);
 	while (getline(csvFile, line))
 	{
 		std::string answer, other;
@@ -39,7 +40,7 @@ void TrainingSet::LoadFromCSV(std::string& filePath, char delimiter, int lineLim
 		for (int i = 0; i < inputSize; ++i)
 		{
 			getline(stream, other, delimiter);
-			inputSignal.push_back(std::stod(other));
+			inputSignal.push_back(normalizeInput(std::stod(other), 64));
 
 		}
 		inputSignals.push_back(inputSignal);
@@ -68,5 +69,12 @@ void TrainingSet::MoveToTestSet(float movePercentage)
 		inputSignals.pop_back();
 		testSetAnswers.push_back(answers[answers.size() - 1]);
 		answers.pop_back();
-	}
+	}s
+}
+
+double TrainingSet::normalizeInput(double n, double limit)
+{
+	if (n >= limit)
+		return 1;
+	return 0;
 }
