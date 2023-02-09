@@ -137,7 +137,7 @@ int main()
 	//std::this_thread::sleep_for(std::chrono::milliseconds(20000));
 	ts.MoveToTestSet(0.2);
 	std::cout << swLoadSet.Restart() << " move complete" << std::endl;
-	std::vector<int> topology = { 784, 100, 50, 26 };
+	std::vector<int> topology = { 784, 200, 100, 50, 26 };
 	NeuralNetwork nn = NeuralNetwork(topology);
 	std::cout << swLoadSet.Stop() << " NN init complete" << std::endl;
 	std::cout << "BEFORE Learning:" << std::endl;

@@ -31,6 +31,6 @@
 *.out
 *.app
 
-
+*.csv
 cmake-build-debug
 .idea
