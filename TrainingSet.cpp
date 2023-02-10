@@ -1,7 +1,7 @@
 #include "TrainingSet.h"
 #include "StopWatch.h"
 
-TrainingSet::TrainingSet(int inputSize, int answerSize)
+TrainingSet::TrainingSet(int inputSize, int answerSize): rng(std::random_device{}())
 {
 	this->inputSize = inputSize;
 	this->answerSize = answerSize;
@@ -10,7 +10,7 @@ TrainingSet::TrainingSet(int inputSize, int answerSize)
 	std::srand(std::time(nullptr));
 }
 
-size_t TrainingSet::Size()
+size_t TrainingSet::Size() const
 {
 	return inputSignals.size();
 }
@@ -104,8 +104,8 @@ void TrainingSet::Shuffle()
 	setSize = inputSignals.size();
 	for (size_t i = 0; i < setSize * 2; ++i)
 	{
-		rnd1 = rand() % setSize;
-		rnd2 = rand() % setSize;
+		rnd1 = getRandomNumber(0, static_cast<int>(setSize) - 1);
+		rnd2 = getRandomNumber(0, static_cast<int>(setSize) - 1);
 		inputSignals[rnd1].swap(inputSignals[rnd2]);
 		answers[rnd1].swap(answers[rnd2]);
 	}
@@ -126,4 +126,20 @@ void TrainingSet::ReturnTestSetToTrainSet()
 	}
 	testSetInputSignals.clear();
 	testSetAnswers.clear();
+}
+
+float TrainingSet::getTestSetSizePerc() const
+{
+    return testSetSizePerc;
+}
+
+void TrainingSet::setTestSetSizePerc(float testSetSizePerc)
+{
+    TrainingSet::testSetSizePerc = testSetSizePerc;
+}
+
+int TrainingSet::getRandomNumber(int min, int max)
+{
+    std::uniform_int_distribution<int> dist(min, max);
+    return dist(rng);
 }

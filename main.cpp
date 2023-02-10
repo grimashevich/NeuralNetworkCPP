@@ -61,6 +61,18 @@ void printVector(std::vector<double> input, std::vector<double> answer)
 
 }
 
+void PrintTopology(std::vector<int> topology)
+{
+    std::cout << "{";
+    for (int i = 0; i < topology.size(); ++i)
+    {
+        std::cout << topology[i];
+        if (i < topology.size() - 1)
+            std::cout << " ";
+    }
+    std::cout << "}" << std::endl;
+}
+
 
 int getIndexOfMaxEl(std::vector<double> vect)
 {
@@ -122,31 +134,55 @@ void SyntheticTest()
 	CheckTestSet(TestInputs, TestTargets, nn);
 }
 
-int main()
+int main(int argc, char *argv[])
 {
+    if (argc < 3)
+    {
+        std::cout << "Learning rate ratio required" << std::endl;
+        return 1;
+    }
+
+    double learningRate = std::stod(argv[1]);
+    double learningRateRatio = std::stod(argv[2]);
+
 	srand(std::time(nullptr));
 	//SyntheticTest();
 
 	TrainingSet ts = TrainingSet(784, 26);
 	StopWatch swLoadSet = StopWatch();
 	swLoadSet.Start();
-	std::string fileName = std::string("/Users/eclown/Desktop/projects/NN/emnist-letters-train.csv");
+	//std::string fileName = std::string("/Users/eclown/Desktop/projects/NN/emnist-letters-train.csv");
+	std::string fileName = std::string("/Users/user/Desktop/projects/NN/emnist-letters-train.csv");
 	ts.answerOffset = -1;
 	ts.LoadFromCSV(fileName, ',', 0, false);
 	std::cout << swLoadSet.Restart() << " data set loaded" << std::endl;
 
 	//std::this_thread::sleep_for(std::chrono::milliseconds(20000));
 
-	ts.MoveToTestSet(0.1);
-	std::cout << swLoadSet.Restart() << " move complete" << std::endl;
+    ts.setTestSetSizePerc(0.1);
+    ts.Shuffle();
+	//ts.MoveToTestSet(0.1);
+	//std::cout << swLoadSet.Restart() << " move complete" << std::endl;
 
-	std::vector<int> topology = { 784, 100, 50, 26 };
+	//std::vector<int> topology = { 784, 252, 81, 26 };
+	std::vector<int> topology = { 784, 444, 252, 143, 81, 46, 26 };
 	NeuralNetwork nn = NeuralNetwork(topology);
-	std::cout << swLoadSet.Stop() << " NN init complete" << std::endl;
-	std::cout << "BEFORE Learning:" << std::endl;
-	CheckTestSet(ts.testSetInputSignals, ts.testSetAnswers, nn);
-	std::cout << std::endl;
-	double learningRateRatio = 0.7;
+	//std::cout << swLoadSet.Stop() << " NN init complete" << std::endl;
+    nn.setLearningRate(learningRate);
+
+    std::cout << "- - - - - - - - - - - -" << std::endl;
+    std::cout << "Topology: ";
+    PrintTopology(topology);
+    std::cout << "Train set size: " << ts.answers.size() << std::endl;
+    std::cout << "Test set size: " << ts.testSetAnswers.size() << std::endl;
+    std::cout << "Learning rate: " << nn.getLearningRate() << std::endl;
+    std::cout << "Learning rate ratio: " << learningRateRatio << std::endl;
+    std::cout << "- - - - - - - - - - - -" << std::endl;
+
+    std::cout << "BEFORE Learning:" << " ";
+    CheckTestSet(ts.testSetInputSignals, ts.testSetAnswers, nn);
+    std::cout << std::endl;
+    ts.Shuffle();
 	for (int i = 0; i < 50; ++i)
 	{
 		swLoadSet.Start();
