@@ -158,14 +158,14 @@ int main(int argc, char *argv[])
 	ts.answerOffset = -1;
 
 
-	ts.LoadFromCSV(fileName, ',', 10000, false);
+	ts.LoadFromCSV(fileName, ',', 0, false);
 	std::cout << swLoadSet.Restart() << " data set loaded" << std::endl;
 
 
     ts.setTestSetSizePerc(0.1);
     ts.Shuffle();
 
-	std::vector<int> topology = { 784, 405, 26, 26 };
+	std::vector<int> topology = { 784, 208, 52, 26 };
 	NeuralNetwork nn = NeuralNetwork(topology);
 
     nn.setLearningRate(learningRate);

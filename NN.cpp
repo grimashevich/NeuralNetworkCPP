@@ -4,6 +4,7 @@
 #include <random>
 #include <sstream>
 #include <fstream>
+#include <stdexcept>
 
 class NeuralNetwork {
 public:
@@ -95,7 +96,16 @@ public:
 			weightsFile << "\n";
 		}
 		weightsFile.close();
+	}
 
+	void loadWeight(std::string fileName)
+	{
+		std::ifstream weightsFile(fileName);
+		std::string line;
+		getline(weightsFile, line);
+		if (!CheckTopology(line))
+			throw std::runtime_error("Wrong saved weight topology");
+		//TODO here.
 	}
 
 private:
@@ -106,6 +116,30 @@ private:
 	double learningRate;
 	std::mt19937 generator;
 
+
+	static std::vector<std::string> splitString(const std::string& str, char sep)
+	{
+		std::vector<std::string> result(0);
+		std::string tmp;
+		std::stringstream ss(str);
+		while (getline(ss, tmp, sep))
+			result.push_back(tmp);
+		return result;
+	}
+
+	bool CheckTopology(const std::string& strTopology)
+	{
+		std::vector<std::string> strTopologyArr = splitString(strTopology, ' ');
+		if (strTopologyArr.size() != topology.size())
+			return false;
+		for (int i = 0; i < strTopologyArr.size(); ++i)
+		{
+			if (std::stoi(strTopologyArr[i]) != topology[i])
+				return false;
+		}
+		return true;
+
+	}
 
 	std::string getFileNameForWeights(double  accuracy, int epoch)
 	{
