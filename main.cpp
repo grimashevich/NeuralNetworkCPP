@@ -158,18 +158,15 @@ int main(int argc, char *argv[])
 	ts.answerOffset = -1;
 
 
-	//ts.LoadFromCSV(fileName, ',', 0, false);
-	//std::cout << swLoadSet.Restart() << " data set loaded" << std::endl;
+	ts.LoadFromCSV(fileName, ',', 10000, false);
+	std::cout << swLoadSet.Restart() << " data set loaded" << std::endl;
 
 
-    //ts.setTestSetSizePerc(0.1);
-    //ts.Shuffle();
+    ts.setTestSetSizePerc(0.1);
+    ts.Shuffle();
 
-	//std::vector<int> topology = { 784, 370, 100, 26 };
-	std::vector<int> topology = { 10, 5, 3, 1 };
+	std::vector<int> topology = { 784, 405, 26, 26 };
 	NeuralNetwork nn = NeuralNetwork(topology);
-	nn.saveWeight("000");
-	return 0;
 
     nn.setLearningRate(learningRate);
 
@@ -191,7 +188,8 @@ int main(int argc, char *argv[])
 		swLoadSet.Start();
 		nn.train(ts.inputSignals, ts.answers, 1);
 		std::cout << "epoch " << i << " done in " << swLoadSet.Stop() << " ";
-		CheckTestSet(ts.testSetInputSignals, ts.testSetAnswers, nn);
+		double accuracy = CheckTestSet(ts.testSetInputSignals, ts.testSetAnswers, nn);
+		nn.saveWeight(accuracy, i);
 		ts.Shuffle();
 		nn.setLearningRate(nn.getLearningRate() * learningRateRatio);
 	}

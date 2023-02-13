@@ -58,9 +58,9 @@ public:
 		learningRate = newLearningRate;
 	}
 
-	void saveWeight(const std::string& accuracy)
+	void saveWeight(double accuracy, int epoch)
 	{
-		std::string fileName = getFileNameForWeights(accuracy);
+		std::string fileName = getFileNameForWeights(accuracy, epoch);
 		std::ofstream weightsFile (fileName);
 		if (! weightsFile.is_open())
 		{
@@ -107,7 +107,7 @@ private:
 	std::mt19937 generator;
 
 
-	std::string getFileNameForWeights(const std::string& accuracy)
+	std::string getFileNameForWeights(double  accuracy, int epoch)
 	{
 		std::ostringstream fileName;
 		fileName << "NN_weights_";
@@ -117,6 +117,8 @@ private:
 			if (i < topology.size() - 1)
 				fileName << "-";
 		}
+		fileName << "_epoch-";
+		fileName << epoch;
 		fileName << "_accuracy-";
 		fileName << accuracy;
 		return fileName.str();
