@@ -2,6 +2,8 @@
 #include <vector>
 #include <cmath>
 #include <random>
+#include <sstream>
+#include <fstream>
 
 class NeuralNetwork {
 public:
@@ -44,13 +46,6 @@ public:
         return output;
     }
 
-private:
-    std::vector<int> topology;
-    std::vector<std::vector<double>> layers;
-    std::vector<std::vector<std::vector<double>>> weights;
-    std::vector<std::vector<double>> biases;
-	double learningRate;
-public:
 	[[nodiscard]] double getLearningRate() const
 	{
 		return learningRate;
@@ -63,8 +58,69 @@ public:
 		learningRate = newLearningRate;
 	}
 
+	void saveWeight(const std::string& accuracy)
+	{
+		std::string fileName = getFileNameForWeights(accuracy);
+		std::ofstream weightsFile (fileName);
+		if (! weightsFile.is_open())
+		{
+			std::cerr << "Error open file " << fileName << " for save weight";
+			return;
+		}
+		for (int layerSize: topology) {
+			weightsFile << layerSize << " ";
+		}
+		weightsFile << "\n";
+		//Save weights
+		for (auto & table : weights){
+			for (auto & row : table) {
+				int i = 0;
+				for (double weight : row) {
+					if (i++ > 0)
+						weightsFile << " ";
+					weightsFile << weight;
+				}
+				weightsFile << "\n";
+			}
+			weightsFile << "\n";
+		}
+		//Save biases
+		for (auto & layer: biases){
+			int i = 0;
+			for (double bias: layer){
+				if (i++ > 0)
+					weightsFile << " ";
+				weightsFile << bias;
+			}
+			weightsFile << "\n";
+		}
+		weightsFile.close();
+
+	}
+
 private:
+    std::vector<int> topology;
+    std::vector<std::vector<double>> layers;
+    std::vector<std::vector<std::vector<double>>> weights;
+    std::vector<std::vector<double>> biases;
+	double learningRate;
 	std::mt19937 generator;
+
+
+	std::string getFileNameForWeights(const std::string& accuracy)
+	{
+		std::ostringstream fileName;
+		fileName << "NN_weights_";
+		for (int i = 0; i < topology.size(); ++i)
+		{
+			fileName << topology[i];
+			if (i < topology.size() - 1)
+				fileName << "-";
+		}
+		fileName << "_accuracy-";
+		fileName << accuracy;
+		return fileName.str();
+	}
 
     void init_weights() {
         std::normal_distribution<double> distribution(0, 1);
