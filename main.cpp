@@ -189,7 +189,8 @@ int main(int argc, char *argv[])
 		nn.train(ts.inputSignals, ts.answers, 1);
 		std::cout << "epoch " << i << " done in " << swLoadSet.Stop() << " ";
 		double accuracy = CheckTestSet(ts.testSetInputSignals, ts.testSetAnswers, nn);
-		nn.saveWeight(accuracy, i);
+		if (accuracy > 70.0)
+			nn.saveWeight(accuracy, i);
 		ts.Shuffle();
 		nn.setLearningRate(nn.getLearningRate() * learningRateRatio);
 	}
