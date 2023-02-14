@@ -5,63 +5,69 @@
 #include <sstream>
 #include <fstream>
 #include <stdexcept>
+#include "NnBase.h"
 
-class NeuralNetwork {
+class NeuralNetwork: NnBase
+{
 public:
-    NeuralNetwork(const std::vector<int>& topology) : topology(topology) {
-        int num_layers = topology.size();
-        for (int i = 0; i < num_layers; i++) {
+    NeuralNetwork(const std::vector<int>& topology) : topology(topology), generator(std::random_device{}())
+	{
+        size_t numLayers = topology.size();
+        for (int i = 0; i < numLayers; i++) {
             layers.emplace_back(topology[i]);
             if (i != 0) {
-                //weights.emplace_back(topology[i], std::vector<std::vector<double>>(topology[i - 1]));
                 weights.emplace_back(topology[i], std::vector<double>(topology[i - 1]));
                 biases.emplace_back(topology[i]);
             }
         }
-        init_weights();
-        init_biases();
+		InitWeights();
+		InitBiases();
 		learningRate = 0.02;
     }
 
-    void train(const std::vector<std::vector<double>>& inputs, const std::vector<std::vector<double>>& targets, int num_epochs) {
-        for (int e = 0; e < num_epochs; e++) {
+    void Train(const std::vector<std::vector<double>>& inputs, const std::vector<std::vector<double>>& targets, int numEpochs)
+	{
+        for (int e = 0; e < numEpochs; e++) {
             for (int i = 0; i < inputs.size(); i++) {
-                std::vector<std::vector<double>> activations = feedforward(inputs[i]);
-                std::vector<std::vector<double>> errors = backprop(activations, targets[i]);
-                update_weights(errors, activations);
-                update_biases(errors);
+                std::vector<std::vector<double>> activations = ForwardFeed(inputs[i]);
+                std::vector<std::vector<double>> errors = BackProp(activations, targets[i]);
+				UpdateWeights(errors, activations);
+				UpdateBiases(errors);
             }
         }
     }
 
-    std::vector<double> predict(const std::vector<double>& input) {
-        std::vector<double> output = feedforward(input).back();
+    std::vector<double> Predict(const std::vector<double>& input)
+	{
+        std::vector<double> output = ForwardFeed(input).back();
         double sum = 0;
-        for (int i = 0; i < output.size(); i++) {
+        for (int i = 0; i < output.size(); i++)
+		{
             output[i] = exp(output[i]);
             sum += output[i];
         }
-        for (int i = 0; i < output.size(); i++) {
+        for (int i = 0; i < output.size(); i++)
+		{
             output[i] /= sum;
         }
         return output;
     }
 
-	[[nodiscard]] double getLearningRate() const
+	[[nodiscard]] double GetLearningRate() const
 	{
 		return learningRate;
 	}
 
-	void setLearningRate(double newLearningRate)
+	void SetLearningRate(double newLearningRate)
 	{
 		if (learningRate <= 0)
 			return;
 		learningRate = newLearningRate;
 	}
 
-	void saveWeight(double accuracy, int epoch)
+	void SaveWeight(double accuracy, int epoch)
 	{
-		std::string fileName = getFileNameForWeights(accuracy, epoch);
+		std::string fileName = GetFileNameForWeights(accuracy, epoch);
 		std::ofstream weightsFile (fileName);
 		if (! weightsFile.is_open())
 		{
@@ -98,14 +104,46 @@ public:
 		weightsFile.close();
 	}
 
-	void loadWeight(std::string fileName)
+	void LoadWeight(std::string fileName)
 	{
 		std::ifstream weightsFile(fileName);
 		std::string line;
-		getline(weightsFile, line);
+		if (getline(weightsFile, line))
 		if (!CheckTopology(line))
 			throw std::runtime_error("Wrong saved weight topology");
-		//TODO here.
+
+		//load weights
+		int i = 0;
+		for (auto & table : weights)
+		{
+			if (i++ > 0) // Skip blank line between tables
+				getline(weightsFile, line);
+			for (auto & row : table)
+			{
+				getline(weightsFile, line);
+				std::stringstream stream(line);
+				std::string weightStr;
+				for (double & weight : row)
+				{
+					getline(stream, weightStr, ' ');
+					weight = std::stod(weightStr);
+				}
+			}
+		}
+		//load biases
+		getline(weightsFile, line);
+		for (auto & layer: biases)
+		{
+			getline(weightsFile, line);
+			std::stringstream stream(line);
+			std::string biasStr;
+			for (double & bias: layer)
+			{
+				getline(stream, biasStr, ' ');
+				bias = std::stod(biasStr);
+			}
+		}
+		weightsFile.close();
 	}
 
 private:
@@ -117,7 +155,7 @@ private:
 	std::mt19937 generator;
 
 
-	static std::vector<std::string> splitString(const std::string& str, char sep)
+	static std::vector<std::string> SplitString(const std::string& str, char sep)
 	{
 		std::vector<std::string> result(0);
 		std::string tmp;
@@ -129,7 +167,7 @@ private:
 
 	bool CheckTopology(const std::string& strTopology)
 	{
-		std::vector<std::string> strTopologyArr = splitString(strTopology, ' ');
+		std::vector<std::string> strTopologyArr = SplitString(strTopology, ' ');
 		if (strTopologyArr.size() != topology.size())
 			return false;
 		for (int i = 0; i < strTopologyArr.size(); ++i)
@@ -141,7 +179,7 @@ private:
 
 	}
 
-	std::string getFileNameForWeights(double  accuracy, int epoch)
+	std::string GetFileNameForWeights(double  accuracy, int epoch)
 	{
 		std::ostringstream fileName;
 		fileName << "NN_weights_";
@@ -158,7 +196,7 @@ private:
 		return fileName.str();
 	}
 
-    void init_weights() {
+    void InitWeights() {
         std::normal_distribution<double> distribution(0, 1);
         for (int i = 0; i < weights.size(); i++) {
             for (int j = 0; j < weights[i].size(); j++) {
@@ -169,7 +207,7 @@ private:
         }
     }
 
-    void init_biases() {
+    void InitBiases() {
         std::normal_distribution<double> distribution(0, 1);
         for (int i = 0; i < biases.size(); i++) {
             for (int j = 0; j < biases[i].size(); j++) {
@@ -178,7 +216,7 @@ private:
         }
     }
 
-    std::vector<std::vector<double>> feedforward(const std::vector<double>& input)
+    std::vector<std::vector<double>> ForwardFeed(const std::vector<double>& input)
     {
         layers[0] = input;
         for (int i = 1; i < topology.size(); i++) {
@@ -193,7 +231,7 @@ private:
         return layers;
     }
 
-    std::vector<std::vector<double>> backprop(const std::vector<std::vector<double>> &activations, const std::vector<double> &target) {
+    std::vector<std::vector<double>> BackProp(const std::vector<std::vector<double>> &activations, const std::vector<double> &target) {
         std::vector<std::vector<double>> errors(topology.size());
         int output_layer = topology.size() - 1;
         for (int i = 0; i < topology[output_layer]; i++) {
@@ -205,13 +243,13 @@ private:
                 for (int k = 0; k < topology[i + 1]; k++) {
                     sum += errors[i + 1][k] * weights[i][k][j];
                 }
-                errors[i].emplace_back(sum * dsigmoid(activations[i][j]));
+                errors[i].emplace_back(sum * dSigmoid(activations[i][j]));
             }
         }
         return errors;
     }
 
-    void update_weights(const std::vector<std::vector<double>> &errors, const std::vector<std::vector<double>> &activations) {
+    void UpdateWeights(const std::vector<std::vector<double>> &errors, const std::vector<std::vector<double>> &activations) {
         for (int i = 0; i < weights.size(); i++) {
             for (int j = 0; j < weights[i].size(); j++) {
                 for (int k = 0; k < weights[i][j].size(); k++) {
@@ -222,20 +260,12 @@ private:
         }
     }
 
-    void update_biases(const std::vector<std::vector<double>> &errors) {
+    void UpdateBiases(const std::vector<std::vector<double>> &errors) {
         for (int i = 0; i < biases.size(); i++) {
             for (int j = 0; j < biases[i].size(); j++) {
                 double delta = -learningRate * errors[i + 1][j];
                 biases[i][j] += delta;
             }
         }
-    }
-
-    double sigmoid(double x) {
-        return 1.0 / (1.0 + exp(-x));
-    }
-
-    double dsigmoid(double x) {
-        return x * (1 - x);
     }
 };

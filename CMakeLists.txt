@@ -3,4 +3,4 @@ project(NN)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(NN main.cpp NN.cpp TrainingSet.cpp TrainingSet.h StopWatch.cpp)
+add_executable(NN main.cpp NN.cpp TrainingSet.cpp TrainingSet.h StopWatch.cpp NnBase.h)

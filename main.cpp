@@ -96,7 +96,7 @@ double CheckTestSet(std::vector<std::vector<double>>& TestInputs, std::vector<st
 	for (size_t i = 0; i < TestInputs.size(); i++)
 	{
 		std::vector<double> input = TestInputs[i];
-		std::vector<double> netAnswer = nn.predict(input);
+		std::vector<double> netAnswer = nn.Predict(input);
 		if (getIndexOfMaxEl(netAnswer) == getIndexOfMaxEl(TestTargets[i]))
 			rightCount++;
 		else
@@ -122,15 +122,15 @@ void SyntheticTest()
 
 	std::vector<int> topology = { 2, 12, 6, 4 };
 	NeuralNetwork nn = NeuralNetwork(topology);
-	nn.train(inputs, targets, 1);
+	nn.Train(inputs, targets, 1);
 	CheckTestSet(TestInputs, TestTargets, nn);
-	nn.train(inputs, targets, 1);
+	nn.Train(inputs, targets, 1);
 	CheckTestSet(TestInputs, TestTargets, nn);
-	nn.train(inputs, targets, 1);
+	nn.Train(inputs, targets, 1);
 	CheckTestSet(TestInputs, TestTargets, nn);
-	nn.train(inputs, targets, 1);
+	nn.Train(inputs, targets, 1);
 	CheckTestSet(TestInputs, TestTargets, nn);
-	nn.train(inputs, targets, 1);
+	nn.Train(inputs, targets, 1);
 	CheckTestSet(TestInputs, TestTargets, nn);
 }
 
@@ -151,31 +151,31 @@ int main(int argc, char *argv[])
 	TrainingSet ts = TrainingSet(784, 26);
 	StopWatch swLoadSet = StopWatch();
 	swLoadSet.Start();
-	std::string fileName = std::string("/Users/eclown/Desktop/projects/NN/emnist-letters-train.csv");
+	std::string fileName = std::string("/Users/eclown/Desktop/projects/NN/emnist-letters-Train.csv");
 	if (argc >= 4)
 		fileName = argv[3];
-	//std::string fileName = std::string("/Users/user/Desktop/projects/NN/emnist-letters-train.csv");
+	//std::string fileName = std::string("/Users/user/Desktop/projects/NN/emnist-letters-Train.csv");
 	ts.answerOffset = -1;
+
+	std::vector<int> topology = { 784, 301, 99, 26 };
+	NeuralNetwork nn = NeuralNetwork(topology);
+	//nn.LoadWeight("NN_weights_5-4-3-2_epoch-0_accuracy-0");
+	//nn.SaveWeight(0, 0);
+	nn.SetLearningRate(learningRate);
 
 
 	ts.LoadFromCSV(fileName, ',', 0, false);
 	std::cout << swLoadSet.Restart() << " data set loaded" << std::endl;
-
-
     ts.setTestSetSizePerc(0.1);
     ts.Shuffle();
 
-	std::vector<int> topology = { 784, 208, 52, 26 };
-	NeuralNetwork nn = NeuralNetwork(topology);
-
-    nn.setLearningRate(learningRate);
 
     std::cout << "- - - - - - - - - - - -" << std::endl;
     std::cout << "Topology: ";
     PrintTopology(topology);
     std::cout << "Train set size: " << ts.answers.size() << std::endl;
     std::cout << "Test set size: " << ts.testSetAnswers.size() << std::endl;
-    std::cout << "Learning rate: " << nn.getLearningRate() << std::endl;
+    std::cout << "Learning rate: " << nn.GetLearningRate() << std::endl;
     std::cout << "Learning rate ratio: " << learningRateRatio << std::endl;
     std::cout << "- - - - - - - - - - - -" << std::endl;
 
@@ -186,13 +186,13 @@ int main(int argc, char *argv[])
 	for (int i = 0; i < 50; ++i)
 	{
 		swLoadSet.Start();
-		nn.train(ts.inputSignals, ts.answers, 1);
+		nn.Train(ts.inputSignals, ts.answers, 1);
 		std::cout << "epoch " << i << " done in " << swLoadSet.Stop() << " ";
 		double accuracy = CheckTestSet(ts.testSetInputSignals, ts.testSetAnswers, nn);
 		if (accuracy > 70.0)
-			nn.saveWeight(accuracy, i);
+			nn.SaveWeight(accuracy, i);
 		ts.Shuffle();
-		nn.setLearningRate(nn.getLearningRate() * learningRateRatio);
+		nn.SetLearningRate(nn.GetLearningRate() * learningRateRatio);
 	}
 
 }
