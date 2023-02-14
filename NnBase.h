@@ -14,10 +14,14 @@ public:
 	virtual void SaveWeight(double accuracy, int epoch) = 0;
 	virtual void LoadWeight(std::string fileName) = 0;
 
+	[[nodiscard]] double GetLearningRate() const { return learningRate;	}
+	void SetLearningRate(double newLearningRate) { if (learningRate > 0) {learningRate = newLearningRate;} }
 	static double sigmoid(double x) { return 1.0 / (1.0 + exp(-x)); }
 	static double dSigmoid(double x) { return x * (1 - x); }
 
 
+protected:
+	double learningRate{0.02};
 };
 
 #endif //NN_NNBASE_H

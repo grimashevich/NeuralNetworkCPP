@@ -9,7 +9,8 @@
 #include <algorithm>
 #include <random>
 
-class TrainingSet {
+class TrainingSet
+{
 public:
 	std::vector<std::vector<double>> inputSignals;
 	std::vector<std::vector<double>> answers;
@@ -26,6 +27,7 @@ public:
     float getTestSetSizePerc() const;
     void setTestSetSizePerc(float testSetSizePerc);
     int getRandomNumber(int min, int max);
+
 private:
 	int inputSize;
 	int answerSize;
