@@ -1,20 +1,9 @@
 #include <cfloat>
-#include "NN.h"
+#include "MatrixNeuralNetwork.h"
 #include <chrono>
-#include "TrainingSet.h"
+#include "DataSet.h"
 #include "StopWatch.h"
 #include <thread>
-
-void AddItemToTrainSet(double x, double y, double answer, std::vector<std::vector<double>> &inputs, std::vector<std::vector<double>> &targets)
-{
-	std::vector<double> newInput = { x, y };
-	inputs.push_back(newInput);
-	std::vector<double> newAnswer(4);
-	newAnswer[answer] = 1;
-	targets.push_back(newAnswer);
-}
-
-
 
 void PrintTopology(std::vector<int> topology)
 {
@@ -46,7 +35,7 @@ int getIndexOfMaxEl(std::vector<double> vect)
 
 double CheckTestSet(std::vector<std::vector<double>>& TestInputs,
 					std::vector<std::vector<double>>& TestTargets,
-					NnBase *nn)
+					NeuralNetworkBase *nn)
 {
 	int rightCount = 0;
 	int wrongCount = 0;
@@ -90,16 +79,15 @@ int main(int argc, char *argv[])
 
 
 	std::vector<int> topology = { 784, 333, 222, 26 };
-	NnBase *nn = new NeuralNetwork(topology);
-	//nn.LoadWeight("NN_weights_5-4-3-2_epoch-0_accuracy-0");
-	//nn.SaveWeight(0, 0);
+	NeuralNetworkBase *nn = new MatrixNeuralNetwork(topology);
+	//neuralNetwork.LoadWeight("NN_weights_5-4-3-2_epoch-0_accuracy-0");
+	//neuralNetwork.SaveWeight(0, 0);
 	nn->SetLearningRate(learningRate);
 
-	TrainingSet ts = TrainingSet(784, 26);
-	ts.answerOffset = -1;
+	DataSet ts = DataSet(784, 26);
 	ts.LoadFromCSV(fileName, ',', 0, false);
 	//std::cout << swLoadSet.Restart() << " data set loaded" << std::endl;
-    ts.setTestSetSizePerc(0.1);
+    ts.SetTestSetSizeRatio(0.1);
     ts.Shuffle();
 
 

@@ -1,6 +1,6 @@
-#include "NN.h"
+#include "MatrixNeuralNetwork.h"
 
-NeuralNetwork::NeuralNetwork(const std::vector<int> &Topology): topology(Topology), generator(std::random_device{}())
+MatrixNeuralNetwork::MatrixNeuralNetwork(const std::vector<int> &Topology): topology(Topology), generator(std::random_device{}())
 {
 	size_t numLayers = Topology.size();
 	for (int i = 0; i < numLayers; i++) {
@@ -14,8 +14,8 @@ NeuralNetwork::NeuralNetwork(const std::vector<int> &Topology): topology(Topolog
 	InitBiases();
 }
 
-void NeuralNetwork::Train(const std::vector<std::vector<double>>& inputs,
-						  const std::vector<std::vector<double>>& targets, int numEpochs)
+void MatrixNeuralNetwork::Train(const std::vector<std::vector<double>>& inputs,
+								const std::vector<std::vector<double>>& targets, int numEpochs)
 {
 	for (int e = 0; e < numEpochs; e++) {
 		for (int i = 0; i < inputs.size(); i++) {
@@ -27,7 +27,7 @@ void NeuralNetwork::Train(const std::vector<std::vector<double>>& inputs,
 	}
 }
 
-std::vector<double> NeuralNetwork::Predict(const std::vector<double>& input)
+std::vector<double> MatrixNeuralNetwork::Predict(const std::vector<double>& input)
 {
 	std::vector<double> output = ForwardFeed(input).back();
 	double sum = 0;
@@ -45,7 +45,7 @@ std::vector<double> NeuralNetwork::Predict(const std::vector<double>& input)
 
 
 
-void NeuralNetwork::SaveWeight(double accuracy, int epoch)
+void MatrixNeuralNetwork::SaveWeight(double accuracy, int epoch)
 {
 	std::string fileName = GetFileNameForWeights(accuracy, epoch);
 	std::ofstream weightsFile (fileName);
@@ -84,7 +84,7 @@ void NeuralNetwork::SaveWeight(double accuracy, int epoch)
 	weightsFile.close();
 }
 
-void NeuralNetwork::LoadWeight(std::string fileName)
+void MatrixNeuralNetwork::LoadWeight(std::string fileName)
 {
 	std::ifstream weightsFile(fileName);
 	std::string line;
@@ -126,7 +126,7 @@ void NeuralNetwork::LoadWeight(std::string fileName)
 	weightsFile.close();
 }
 
-std::vector<std::string> NeuralNetwork::SplitString(const std::string& str, char sep)
+std::vector<std::string> MatrixNeuralNetwork::SplitString(const std::string& str, char sep)
 {
 	std::vector<std::string> result(0);
 	std::string tmp;
@@ -136,7 +136,7 @@ std::vector<std::string> NeuralNetwork::SplitString(const std::string& str, char
 	return result;
 }
 
-bool NeuralNetwork::CheckTopology(const std::string& strTopology)
+bool MatrixNeuralNetwork::CheckTopology(const std::string& strTopology)
 {
 	std::vector<std::string> strTopologyArr = SplitString(strTopology, ' ');
 	if (strTopologyArr.size() != topology.size())
@@ -150,7 +150,7 @@ bool NeuralNetwork::CheckTopology(const std::string& strTopology)
 
 }
 
-std::string NeuralNetwork::GetFileNameForWeights(double  accuracy, int epoch)
+std::string MatrixNeuralNetwork::GetFileNameForWeights(double  accuracy, int epoch)
 {
 	std::ostringstream fileName;
 	fileName << "NN_weights_";
@@ -167,7 +167,7 @@ std::string NeuralNetwork::GetFileNameForWeights(double  accuracy, int epoch)
 	return fileName.str();
 }
 
-void NeuralNetwork::InitWeights()
+void MatrixNeuralNetwork::InitWeights()
 {
 	std::normal_distribution<double> distribution(0, 1);
 	for (int i = 0; i < weights.size(); i++) {
@@ -179,7 +179,7 @@ void NeuralNetwork::InitWeights()
 	}
 }
 
-void NeuralNetwork::InitBiases()
+void MatrixNeuralNetwork::InitBiases()
 {
 	std::normal_distribution<double> distribution(0, 1);
 	for (int i = 0; i < biases.size(); i++) {
@@ -189,7 +189,7 @@ void NeuralNetwork::InitBiases()
 	}
 }
 
-std::vector<std::vector<double>> NeuralNetwork::ForwardFeed(const std::vector<double>& input)
+std::vector<std::vector<double>> MatrixNeuralNetwork::ForwardFeed(const std::vector<double>& input)
 {
 	layers[0] = input;
 	for (int i = 1; i < topology.size(); i++) {
@@ -198,13 +198,13 @@ std::vector<std::vector<double>> NeuralNetwork::ForwardFeed(const std::vector<do
 			for (int k = 0; k < layers[i - 1].size(); k++) {
 				sum += layers[i - 1][k] * weights[i - 1][j][k];
 			}
-			layers[i][j] = sigmoid(sum);
+			layers[i][j] = Sigmoid(sum);
 		}
 	}
 	return layers;
 }
 
-std::vector<std::vector<double>> NeuralNetwork::BackProp(const std::vector<std::vector<double>> &activations, const std::vector<double> &target)
+std::vector<std::vector<double>> MatrixNeuralNetwork::BackProp(const std::vector<std::vector<double>> &activations, const std::vector<double> &target)
 {
 	std::vector<std::vector<double>> errors(topology.size());
 	int output_layer = topology.size() - 1;
@@ -217,13 +217,13 @@ std::vector<std::vector<double>> NeuralNetwork::BackProp(const std::vector<std::
 			for (int k = 0; k < topology[i + 1]; k++) {
 				sum += errors[i + 1][k] * weights[i][k][j];
 			}
-			errors[i].emplace_back(sum * dSigmoid(activations[i][j]));
+			errors[i].emplace_back(sum * DSigmoid(activations[i][j]));
 		}
 	}
 	return errors;
 }
 
-void NeuralNetwork::UpdateWeights(const std::vector<std::vector<double>> &errors, const std::vector<std::vector<double>> &activations)
+void MatrixNeuralNetwork::UpdateWeights(const std::vector<std::vector<double>> &errors, const std::vector<std::vector<double>> &activations)
 {
 	for (int i = 0; i < weights.size(); i++) {
 		for (int j = 0; j < weights[i].size(); j++) {
@@ -235,7 +235,7 @@ void NeuralNetwork::UpdateWeights(const std::vector<std::vector<double>> &errors
 	}
 }
 
-void NeuralNetwork::UpdateBiases(const std::vector<std::vector<double>> &errors)
+void MatrixNeuralNetwork::UpdateBiases(const std::vector<std::vector<double>> &errors)
 {
 	for (int i = 0; i < biases.size(); i++) {
 		for (int j = 0; j < biases[i].size(); j++) {

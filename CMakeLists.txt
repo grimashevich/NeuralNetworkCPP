@@ -3,4 +3,4 @@ project(NN)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(NN main.cpp NN.cpp NN.h TrainingSet.cpp TrainingSet.h StopWatch.cpp NnBase.h NnManager.cpp NnManager.h)
+add_executable(NN main.cpp MatrixNeuralNetwork.cpp MatrixNeuralNetwork.h DataSet.cpp DataSet.h StopWatch.cpp NeuralNetworkBase.h NeuralNetworkManager.cpp NeuralNetworkManager.h NeuralNetworkBase.cpp)

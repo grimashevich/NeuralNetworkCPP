@@ -5,15 +5,15 @@
 #include <sstream>
 #include <fstream>
 #include <stdexcept>
-#include "NnBase.h"
+#include "NeuralNetworkBase.h"
 
 #ifndef NN_NN_H
 #define NN_NN_H
 
-class NeuralNetwork: public NnBase
+class MatrixNeuralNetwork: public NeuralNetworkBase
 {
 public:
-	explicit NeuralNetwork(const std::vector<int>& Topology);
+	explicit MatrixNeuralNetwork(const std::vector<int>& Topology);
 	void Train(const std::vector<std::vector<double>>& inputs,
 			   const std::vector<std::vector<double>>& targets, int numEpochs) override;
 	std::vector<double> Predict(const std::vector<double>& input) override;

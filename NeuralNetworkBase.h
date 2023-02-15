@@ -1,10 +1,10 @@
-#ifndef NN_NNBASE_H
-#define NN_NNBASE_H
+#ifndef NN_NEURALNETWORKBASE_H
+#define NN_NEURALNETWORKBASE_H
 
 #include <vector>
 #include <random>
 
-class NnBase
+class NeuralNetworkBase
 {
 public:
 	virtual void Train(const std::vector<std::vector<double>>& inputs,
@@ -14,14 +14,17 @@ public:
 	virtual void SaveWeight(double accuracy, int epoch) = 0;
 	virtual void LoadWeight(std::string fileName) = 0;
 
-	[[nodiscard]] double GetLearningRate() const { return learningRate;	}
-	void SetLearningRate(double newLearningRate) { if (learningRate > 0) {learningRate = newLearningRate;} }
-	static double sigmoid(double x) { return 1.0 / (1.0 + exp(-x)); }
-	static double dSigmoid(double x) { return x * (1 - x); }
+	void SetLearningRate(double newLearningRate);
+	static double Sigmoid(double x);
+	static double DSigmoid(double x);
 
+	[[nodiscard]] double GetLearningRate() const;
+
+	virtual ~NeuralNetworkBase();
 
 protected:
 	double learningRate{0.02};
+
 };
 
-#endif //NN_NNBASE_H
+#endif //NN_NEURALNETWORKBASE_H

@@ -1,21 +1,21 @@
-#include "TrainingSet.h"
+#include "DataSet.h"
 #include "StopWatch.h"
 
-TrainingSet::TrainingSet(int inputSize, int answerSize): rng(std::random_device{}())
+DataSet::DataSet(int inputSize, int answerSize): rng(std::random_device{}())
 {
 	this->inputSize = inputSize;
-	this->answerSize = answerSize;
+	this->outputSize = answerSize;
 	answerOffset = 0;
-	testSetSizePerc = 0;
+	testSetSizeRatio = 0;
 	std::srand(std::time(nullptr));
 }
 
-size_t TrainingSet::Size() const
+size_t DataSet::Size() const
 {
 	return inputSignals.size();
 }
 
-void TrainingSet::LoadFromCSV(std::string& filePath, char delimiter, int lineLimit, bool skipFirstLine)
+void DataSet::LoadFromCSV(std::string& filePath, char delimiter, int lineLimit, bool skipFirstLine)
 {
 	//TODO Check is file exist and readable
 	std::ifstream csvFile(filePath);
@@ -53,16 +53,16 @@ void TrainingSet::LoadFromCSV(std::string& filePath, char delimiter, int lineLim
 	csvFile.close();
 }
 
-std::vector<double> TrainingSet::GetVectorAnswer(int rightClassNum) const
+std::vector<double> DataSet::GetVectorAnswer(int rightClassNum) const
 {
-	std::vector<double> answer(answerSize, 0);
+	std::vector<double> answer(outputSize, 0);
 	answer[rightClassNum] = 1;
 	return answer;
 }
 
-void TrainingSet::MoveToTestSet(float movePercentage)
+void DataSet::MoveToTestSet(float movePercentage)
 {
-	testSetSizePerc = movePercentage;
+	testSetSizeRatio = movePercentage;
 	int countToMove = (int)((float) answers.size() * movePercentage);
 	if (movePercentage >= 1.0)
 		countToMove = (int) answers.size();
@@ -83,7 +83,7 @@ void TrainingSet::MoveToTestSet(float movePercentage)
 	answers.erase(answers.begin(), answers.begin() + countToMove);*/
 }
 
-double TrainingSet::normalizeInput(double n, double limit)
+double DataSet::normalizeInput(double n, double limit)
 {
 	if (n >= limit)
 		return 1;
@@ -92,7 +92,7 @@ double TrainingSet::normalizeInput(double n, double limit)
 
 
 
-void TrainingSet::Shuffle()
+void DataSet::Shuffle()
 {
 	//auto sw = StopWatch();
 	//sw.Start();
@@ -104,20 +104,20 @@ void TrainingSet::Shuffle()
 	setSize = inputSignals.size();
 	for (size_t i = 0; i < setSize * 2; ++i)
 	{
-		rnd1 = getRandomNumber(0, static_cast<int>(setSize) - 1);
-		rnd2 = getRandomNumber(0, static_cast<int>(setSize) - 1);
+		rnd1 = GetRandomNumber(0, static_cast<int>(setSize) - 1);
+		rnd2 = GetRandomNumber(0, static_cast<int>(setSize) - 1);
 		inputSignals[rnd1].swap(inputSignals[rnd2]);
 		answers[rnd1].swap(answers[rnd2]);
 	}
 
 	//std::cout <<  sw.Restart() << " shuffle complete" << std::endl;
 
-	MoveToTestSet(testSetSizePerc);
+	MoveToTestSet(testSetSizeRatio);
 
 	//std::cout <<  sw.Restart() << " move to test set complete" << std::endl;
 }
 
-void TrainingSet::ReturnTestSetToTrainSet()
+void DataSet::ReturnTestSetToTrainSet()
 {
 	for (size_t i = 0; i < testSetInputSignals.size(); ++i)
 	{
@@ -128,18 +128,30 @@ void TrainingSet::ReturnTestSetToTrainSet()
 	testSetAnswers.clear();
 }
 
-float TrainingSet::getTestSetSizePerc() const
-{
-    return testSetSizePerc;
-}
 
-void TrainingSet::setTestSetSizePerc(float testSetSizePerc)
-{
-    TrainingSet::testSetSizePerc = testSetSizePerc;
-}
-
-int TrainingSet::getRandomNumber(int min, int max)
+int DataSet::GetRandomNumber(int min, int max)
 {
     std::uniform_int_distribution<int> dist(min, max);
     return dist(rng);
+}
+
+float DataSet::GetTestSetSizeRatio() const
+{
+	return testSetSizeRatio;
+}
+
+void DataSet::SetTestSetSizeRatio(float newTestSetSizeRatio)
+{
+	if (newTestSetSizeRatio >= 0 && newTestSetSizeRatio <= 1)
+		testSetSizeRatio = newTestSetSizeRatio;
+}
+
+int DataSet::GetInputSize() const
+{
+	return inputSize;
+}
+
+int DataSet::GetOutputSize() const
+{
+	return outputSize;
 }
