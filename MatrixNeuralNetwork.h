@@ -20,11 +20,13 @@ public:
 	void SaveWeight(double accuracy, int epoch) override;
 	void LoadWeight(std::string fileName) override;
 
+	std::vector<std::vector<std::vector<double>>> weights;
+	std::vector<std::vector<double>> biases;
+
 private:
 	std::vector<int> topology;
 	std::vector<std::vector<double>> layers;
-	std::vector<std::vector<std::vector<double>>> weights;
-	std::vector<std::vector<double>> biases;
+
 	std::mt19937 generator;
 
 	static std::vector<std::string> SplitString(const std::string& str, char sep);

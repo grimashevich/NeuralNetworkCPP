@@ -54,9 +54,62 @@ double CheckTestSet(std::vector<std::vector<double>>& TestInputs,
 	return result;
 }
 
+void checkTestSet()
+{
+	std::string weightFileName = "/Users/eclown/Desktop/projects/NeuralNetworkCPP/cmake-build-debug/NN_weights_784-151-75-26_epoch-4_accuracy-80.7658";
+
+	std::string testSetFileName = "/Users/eclown/Desktop/projects/NeuralNetworkCPP/emnist-letters-test.csv";
+	//std::string testSetFileName = "/Users/eclown/Desktop/projects/NeuralNetworkCPP/emnist-letters-train.csv";
+
+	DataSet testSet = DataSet(784, 26);
+	testSet.LoadFromCSV(testSetFileName, ',', 0, false);
+	std::vector<int> topology = { 784, 151, 75, 26 };
+	NeuralNetworkBase *nn = new MatrixNeuralNetwork(topology);
+	nn->LoadWeight(weightFileName);
+
+	CheckTestSet(testSet.inputSignals, testSet.answers, nn);
+}
+
+
+void testSaveAndLoadWeight()
+{
+	std::vector<int> topology = { 5, 4, 3, 2};
+	MatrixNeuralNetwork *nn = new MatrixNeuralNetwork(topology);
+
+	int i = 0;
+	for (auto & table: nn->weights)
+	{
+		for (auto & row: table)
+		{
+			for (double & weight: row)
+			{
+				weight = i++;
+			}
+		}
+	}
+	i = 0;
+	for (auto & layer: nn->biases)
+	{
+		for (double & bias: layer)
+		{
+			bias = i++;
+		}
+	}
+	nn->SaveWeight(0, 0);
+	delete nn;
+	nn = new MatrixNeuralNetwork(topology);
+	nn->LoadWeight("/Users/eclown/Desktop/projects/NeuralNetworkCPP/cmake-build-debug/NN_weights_5-4-3-2_epoch-0_accuracy-0");
+	nn->Sigmoid(1);
+}
 
 int main(int argc, char *argv[])
 {
+
+	//testSaveAndLoadWeight();
+	checkTestSet();
+	return 0;
+
+
     if (argc < 3)
     {
         std::cout << "Learning rate ratio required" << std::endl;
@@ -72,23 +125,29 @@ int main(int argc, char *argv[])
 
 	StopWatch swLoadSet = StopWatch();
 	swLoadSet.Start();
-	std::string fileName = std::string("/Users/eclown/Desktop/projects/NN/emnist-letters-Train.csv");
+	std::string fileName = std::string("/Users/eclown/Desktop/projects/NeuralNetworkCPP/emnist-letters-train.csv");
 	if (argc >= 4)
 		fileName = argv[3];
 	//std::string fileName = std::string("/Users/user/Desktop/projects/NN/emnist-letters-Train.csv");
 
 
-	std::vector<int> topology = { 784, 333, 222, 26 };
+	std::vector<int> topology = { 784, 59, 39, 26 };
 	NeuralNetworkBase *nn = new MatrixNeuralNetwork(topology);
 	//neuralNetwork.LoadWeight("NN_weights_5-4-3-2_epoch-0_accuracy-0");
 	//neuralNetwork.SaveWeight(0, 0);
 	nn->SetLearningRate(learningRate);
 
 	DataSet ts = DataSet(784, 26);
+
+
+
 	ts.LoadFromCSV(fileName, ',', 0, false);
-	//std::cout << swLoadSet.Restart() << " data set loaded" << std::endl;
     ts.SetTestSetSizeRatio(0.1);
     ts.Shuffle();
+
+
+
+
 
 
     std::cout << "- - - - - - - - - - - -" << std::endl;
@@ -110,7 +169,7 @@ int main(int argc, char *argv[])
 		nn->Train(ts.inputSignals, ts.answers, 1);
 		std::cout << "epoch " << i << " done in " << swLoadSet.Stop() << " ";
 		double accuracy = CheckTestSet(ts.testSetInputSignals, ts.testSetAnswers, nn);
-		if (accuracy > 70.0)
+		if (accuracy > 50.0)
 			nn->SaveWeight(accuracy, i);
 		ts.Shuffle();
 		nn->SetLearningRate(nn->GetLearningRate() * learningRateRatio);
