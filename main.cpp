@@ -135,31 +135,35 @@ int main(int argc, char *argv[])
 	//neuralNetwork.LoadWeight("NN_weights_5-4-3-2_epoch-0_accuracy-0");
 	//neuralNetwork.SaveWeight(0, 0);
 	nn->SetLearningRate(learningRate);
-	std::cout << "Neural network initialized... " << std::endl <<  sw.Restart();
+	std::cout << "Neural network initialized in " <<  sw.Restart() << std::endl;
 
 
 	std::string testSetFileName = "/Users/eclown/Desktop/projects/NeuralNetworkCPP/emnist-letters-test.csv";
 	DataSet testSet = DataSet(784, 26);
 	testSet.LoadFromCSV(testSetFileName, ',', 0, false);
-	std::cout << "Test set loaded... " << std::endl <<  sw.Restart();
+	std::cout << "Test set loaded in ... " <<  sw.Restart() << std::endl;
 
 	DataSet ts = DataSet(784, 26);
 	ts.LoadFromCSV(fileName, ',', 0, false);
 	ts.SetTestSetSizeRatio(0.0);
 	ts.Shuffle();
-	std::cout << "Train set loaded... " << std::endl  <<  sw.Restart();
+	std::cout << "Train set loaded in ... " <<  sw.Restart() << std::endl;
+
+	auto testSetInput = testSet.inputSignals;
+	auto testSetAnswers = testSet.answers;
+
 
     std::cout << "- - - - - - - - - - - -" << std::endl;
     std::cout << "Topology: ";
     PrintTopology(topology);
     std::cout << "Train set size: " << ts.answers.size() << std::endl;
-    std::cout << "Test set size: " << ts.testSetAnswers.size() << std::endl;
+    std::cout << "Test set size: " << testSetInput.size() << std::endl;
     std::cout << "Learning rate: " << nn->GetLearningRate() << std::endl;
     std::cout << "Learning rate ratio: " << learningRateRatio << std::endl;
     std::cout << "- - - - - - - - - - - -" << std::endl;
 
     std::cout << "BEFORE Learning:" << " ";
-    CheckTestSet(testSet.inputSignals, testSet.answers, nn);
+    CheckTestSet(testSetInput, testSetAnswers, nn);
     std::cout << std::endl;
     ts.Shuffle();
 	for (int i = 0; i < 50; ++i)
@@ -167,7 +171,7 @@ int main(int argc, char *argv[])
 		sw.Start();
 		nn->Train(ts.inputSignals, ts.answers, 1);
 		std::cout << "epoch " << i << " done in " << sw.Stop() << " ";
-		double accuracy = CheckTestSet(testSet.inputSignals, testSet.answers, nn);
+		double accuracy = CheckTestSet(testSetInput, testSetAnswers, nn);
 		if (accuracy > 50.0)
 			nn->SaveWeight(accuracy, i);
 		ts.Shuffle();
