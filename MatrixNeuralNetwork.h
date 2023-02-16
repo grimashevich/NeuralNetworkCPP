@@ -14,8 +14,8 @@ class MatrixNeuralNetwork: public NeuralNetworkBase
 {
 public:
 	explicit MatrixNeuralNetwork(const std::vector<int>& Topology);
-	void Train(const std::vector<std::vector<double>>& inputs,
-			   const std::vector<std::vector<double>>& targets, int numEpochs) override;
+	double Train(const std::vector<std::vector<double>>& inputs,
+				 const std::vector<std::vector<double>>& targets, int numEpochs) override;
 	std::vector<double> Predict(const std::vector<double>& input) override;
 	void SaveWeight(double accuracy, int epoch) override;
 	void LoadWeight(std::string fileName) override;
@@ -39,6 +39,8 @@ private:
 											  const std::vector<double> &target);
 	void UpdateWeights(const std::vector<std::vector<double>> &errors, const std::vector<std::vector<double>> &activations);
 	void UpdateBiases(const std::vector<std::vector<double>> &errors);
+
+	double GetMeanError(std::vector<double> & errors) const;
 
 };
 

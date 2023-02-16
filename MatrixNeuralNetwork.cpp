@@ -14,17 +14,19 @@ MatrixNeuralNetwork::MatrixNeuralNetwork(const std::vector<int> &Topology): topo
 	InitBiases();
 }
 
-void MatrixNeuralNetwork::Train(const std::vector<std::vector<double>>& inputs,
-								const std::vector<std::vector<double>>& targets, int numEpochs)
+double MatrixNeuralNetwork::Train(const std::vector<std::vector<double>>& inputs,
+								  const std::vector<std::vector<double>>& targets, int numEpochs)
 {
+	std::vector<std::vector<double>> errors;
 	for (int e = 0; e < numEpochs; e++) {
 		for (int i = 0; i < inputs.size(); i++) {
 			std::vector<std::vector<double>> activations = ForwardFeed(inputs[i]);
-			std::vector<std::vector<double>> errors = BackProp(activations, targets[i]);
+			errors = BackProp(activations, targets[i]);
 			UpdateWeights(errors, activations);
 			UpdateBiases(errors);
 		}
 	}
+	return GetMeanError(errors[errors.size() - 1]);
 }
 
 std::vector<double> MatrixNeuralNetwork::Predict(const std::vector<double>& input)
@@ -244,3 +246,18 @@ void MatrixNeuralNetwork::UpdateBiases(const std::vector<std::vector<double>> &e
 		}
 	}
 }
+
+double MatrixNeuralNetwork::GetMeanError(std::vector<double> & errors) const
+{
+	double result = 0;
+
+	if ( errors.empty())
+		return 0;
+
+	for (int i = 0; i < errors.size(); ++i)
+		result += abs(errors[i]);
+	result /= static_cast<double>(errors.size());
+	return result;
+}
+
+

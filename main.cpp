@@ -67,7 +67,7 @@ void checkTestSet()
 	NeuralNetworkBase *nn = new MatrixNeuralNetwork(topology);
 	nn->LoadWeight(weightFileName);
 
-	CheckTestSet(testSet.inputSignals, testSet.answers, nn);
+	CheckTestSet(testSet.trainInputs, testSet.trainTargets, nn);
 }
 
 
@@ -144,19 +144,19 @@ int main(int argc, char *argv[])
 //	std::cout << "Test set loaded in ... " <<  sw.Restart() << std::endl;
 
 	DataSet ts = DataSet(784, 26);
-	ts.LoadFromCSV(fileName, ',', 0, false);
-	ts.SetTestSetSizeRatio(0.9);
+	ts.LoadFromCSV(fileName, ',', 1000, false);
+	ts.SetValidationPartRatio(0.9);
 	ts.Shuffle();
 	std::cout << "Train set loaded in ... " <<  sw.Restart() << std::endl;
 
-	auto testSetInput = ts.testSetInputSignals;
-	auto testSetAnswers = ts.testSetAnswers;
+	auto testSetInput = ts.validationInputs;
+	auto testSetAnswers = ts.validationTargets;
 
 
     std::cout << "- - - - - - - - - - - -" << std::endl;
     std::cout << "Topology: ";
     PrintTopology(topology);
-    std::cout << "Train set size: " << ts.answers.size() << std::endl;
+    std::cout << "Train set size: " << ts.trainTargets.size() << std::endl;
     std::cout << "Test set size: " << testSetInput.size() << std::endl;
     std::cout << "Learning rate: " << nn->GetLearningRate() << std::endl;
     std::cout << "Learning rate ratio: " << learningRateRatio << std::endl;
@@ -169,7 +169,7 @@ int main(int argc, char *argv[])
 	for (int i = 1; i <= 50; ++i)
 	{
 		sw.Start();
-		nn->Train(ts.inputSignals, ts.answers, 1);
+		nn->Train(ts.trainInputs, ts.trainTargets, 1);
 		std::cout << "epoch " << i << " done in " << sw.Stop() << " ";
 		double accuracy = CheckTestSet(testSetInput, testSetAnswers, nn);
 		if (accuracy > 50.0)

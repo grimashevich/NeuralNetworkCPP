@@ -12,10 +12,10 @@
 class DataSet
 {
 public:
-	std::vector<std::vector<double>> inputSignals;
-	std::vector<std::vector<double>> answers;
-	std::vector<std::vector<double>> testSetInputSignals;
-	std::vector<std::vector<double>> testSetAnswers;
+	std::vector<std::vector<double>> trainInputs;
+	std::vector<std::vector<double>> trainTargets;
+	std::vector<std::vector<double>> validationInputs;
+	std::vector<std::vector<double>> validationTargets;
 
 	explicit DataSet(int inputSize, int answerSize);
 	size_t Size() const;
@@ -26,22 +26,15 @@ public:
 	void Shuffle();
     int GetRandomNumber(int min, int max);
 
-private:
-public:
 	int GetInputSize() const;
-
 	int GetOutputSize() const;
+	float GetValidationPartRatio() const;
+	void SetValidationPartRatio(float newTestSetSizeRatio);
 
 private:
 	int inputSize;
 	int outputSize;
     float testSetSizeRatio;
-public:
-	float GetTestSetSizeRatio() const;
-
-	void SetTestSetSizeRatio(float newTestSetSizeRatio);
-
-private:
 	std::mt19937 rng;
 
     [[nodiscard]] std::vector<double> GetVectorAnswer(int rightClassNum) const;

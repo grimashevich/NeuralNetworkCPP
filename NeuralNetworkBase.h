@@ -7,9 +7,9 @@
 class NeuralNetworkBase
 {
 public:
-	virtual void Train(const std::vector<std::vector<double>>& inputs,
-					   const std::vector<std::vector<double>>& targets,
-					   int numEpochs) = 0;
+	virtual double Train(const std::vector<std::vector<double>>& inputs,
+						 const std::vector<std::vector<double>>& targets,
+						 int numEpochs) = 0;
 	virtual std::vector<double> Predict(const std::vector<double>& input) = 0;
 	virtual void SaveWeight(double accuracy, int epoch) = 0;
 	virtual void LoadWeight(std::string fileName) = 0;
