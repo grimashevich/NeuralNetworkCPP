@@ -5,7 +5,6 @@ DataSet::DataSet(int inputSize, int answerSize): rng(std::random_device{}())
 {
 	this->inputSize = inputSize;
 	this->outputSize = answerSize;
-	answerOffset = 0;
 	testSetSizeRatio = 0;
 	std::srand(std::time(nullptr));
 }

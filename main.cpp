@@ -58,9 +58,9 @@ void checkTestSet()
 {
 	std::string weightFileName = "/Users/eclown/Desktop/projects/NeuralNetworkCPP/cmake-build-debug/NN_weights_784-151-75-26_epoch-4_accuracy-80.7658";
 
-	std::string testSetFileName = "/Users/eclown/Desktop/projects/NeuralNetworkCPP/emnist-letters-test.csv";
 	//std::string testSetFileName = "/Users/eclown/Desktop/projects/NeuralNetworkCPP/emnist-letters-train.csv";
 
+	std::string testSetFileName = "/Users/eclown/Desktop/projects/NeuralNetworkCPP/emnist-letters-test.csv";
 	DataSet testSet = DataSet(784, 26);
 	testSet.LoadFromCSV(testSetFileName, ',', 0, false);
 	std::vector<int> topology = { 784, 151, 75, 26 };
@@ -106,8 +106,8 @@ int main(int argc, char *argv[])
 {
 
 	//testSaveAndLoadWeight();
-	checkTestSet();
-	return 0;
+	//checkTestSet();
+	//return 0;
 
 
     if (argc < 3)
@@ -123,32 +123,31 @@ int main(int argc, char *argv[])
 	//SyntheticTest();
 
 
-	StopWatch swLoadSet = StopWatch();
-	swLoadSet.Start();
+	StopWatch sw = StopWatch();
+	sw.Start();
 	std::string fileName = std::string("/Users/eclown/Desktop/projects/NeuralNetworkCPP/emnist-letters-train.csv");
 	if (argc >= 4)
 		fileName = argv[3];
 	//std::string fileName = std::string("/Users/user/Desktop/projects/NN/emnist-letters-Train.csv");
-
 
 	std::vector<int> topology = { 784, 59, 39, 26 };
 	NeuralNetworkBase *nn = new MatrixNeuralNetwork(topology);
 	//neuralNetwork.LoadWeight("NN_weights_5-4-3-2_epoch-0_accuracy-0");
 	//neuralNetwork.SaveWeight(0, 0);
 	nn->SetLearningRate(learningRate);
+	std::cout << "Neural network initialized... " << std::endl <<  sw.Restart();
+s
+
+	std::string testSetFileName = "/Users/eclown/Desktop/projects/NeuralNetworkCPP/emnist-letters-test.csv";
+	DataSet testSet = DataSet(784, 26);
+	testSet.LoadFromCSV(testSetFileName, ',', 0, false);
+	std::cout << "Test set loaded... " << std::endl <<  sw.Restart();
 
 	DataSet ts = DataSet(784, 26);
-
-
-
 	ts.LoadFromCSV(fileName, ',', 0, false);
-    ts.SetTestSetSizeRatio(0.1);
-    ts.Shuffle();
-
-
-
-
-
+	ts.SetTestSetSizeRatio(0.0);
+	ts.Shuffle();
+	std::cout << "Train set loaded... " << std::endl  <<  sw.Restart();
 
     std::cout << "- - - - - - - - - - - -" << std::endl;
     std::cout << "Topology: ";
@@ -160,15 +159,15 @@ int main(int argc, char *argv[])
     std::cout << "- - - - - - - - - - - -" << std::endl;
 
     std::cout << "BEFORE Learning:" << " ";
-    CheckTestSet(ts.testSetInputSignals, ts.testSetAnswers, nn);
+    CheckTestSet(testSet.inputSignals, testSet.answers, nn);
     std::cout << std::endl;
     ts.Shuffle();
 	for (int i = 0; i < 50; ++i)
 	{
-		swLoadSet.Start();
+		sw.Start();
 		nn->Train(ts.inputSignals, ts.answers, 1);
-		std::cout << "epoch " << i << " done in " << swLoadSet.Stop() << " ";
-		double accuracy = CheckTestSet(ts.testSetInputSignals, ts.testSetAnswers, nn);
+		std::cout << "epoch " << i << " done in " << sw.Stop() << " ";
+		double accuracy = CheckTestSet(testSet.inputSignals, testSet.answers, nn);
 		if (accuracy > 50.0)
 			nn->SaveWeight(accuracy, i);
 		ts.Shuffle();
