@@ -136,7 +136,7 @@ int main(int argc, char *argv[])
 	//neuralNetwork.SaveWeight(0, 0);
 	nn->SetLearningRate(learningRate);
 	std::cout << "Neural network initialized... " << std::endl <<  sw.Restart();
-s
+
 
 	std::string testSetFileName = "/Users/eclown/Desktop/projects/NeuralNetworkCPP/emnist-letters-test.csv";
 	DataSet testSet = DataSet(784, 26);
