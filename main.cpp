@@ -145,7 +145,7 @@ int main(int argc, char *argv[])
 
 	DataSet ts = DataSet(784, 26);
 	ts.LoadFromCSV(fileName, ',', 0, false);
-	ts.SetTestSetSizeRatio(0.0);
+	ts.SetTestSetSizeRatio(0.9);
 	ts.Shuffle();
 	std::cout << "Train set loaded in ... " <<  sw.Restart() << std::endl;
 
