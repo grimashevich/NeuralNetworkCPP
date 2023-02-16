@@ -18,15 +18,17 @@ double MatrixNeuralNetwork::Train(const std::vector<std::vector<double>>& inputs
 								  const std::vector<std::vector<double>>& targets, int numEpochs)
 {
 	std::vector<std::vector<double>> errors;
+	double netError = 0;
 	for (int e = 0; e < numEpochs; e++) {
 		for (int i = 0; i < inputs.size(); i++) {
 			std::vector<std::vector<double>> activations = ForwardFeed(inputs[i]);
 			errors = BackProp(activations, targets[i]);
+			netError += GetMeanError(errors[errors.size() - 1]);
 			UpdateWeights(errors, activations);
 			UpdateBiases(errors);
 		}
 	}
-	return GetMeanError(errors[errors.size() - 1]);
+	return netError;
 }
 
 std::vector<double> MatrixNeuralNetwork::Predict(const std::vector<double>& input)
@@ -47,9 +49,13 @@ std::vector<double> MatrixNeuralNetwork::Predict(const std::vector<double>& inpu
 
 
 
-void MatrixNeuralNetwork::SaveWeight(double accuracy, int epoch)
+void MatrixNeuralNetwork::SaveWeights(double accuracy, int epoch, std::string fName)
 {
-	std::string fileName = GetFileNameForWeights(accuracy, epoch);
+	std::string fileName;
+	if (fName.empty())
+		fileName = GetFileNameForWeights(accuracy, epoch);
+	else
+		fileName = fName;
 	std::ofstream weightsFile (fileName);
 	if (! weightsFile.is_open())
 	{
@@ -155,7 +161,7 @@ bool MatrixNeuralNetwork::CheckTopology(const std::string& strTopology)
 std::string MatrixNeuralNetwork::GetFileNameForWeights(double  accuracy, int epoch)
 {
 	std::ostringstream fileName;
-	fileName << "NN_weights_";
+	fileName << currentDateTime() << "_";
 	for (int i = 0; i < topology.size(); ++i)
 	{
 		fileName << topology[i];
@@ -166,6 +172,7 @@ std::string MatrixNeuralNetwork::GetFileNameForWeights(double  accuracy, int epo
 	fileName << epoch;
 	fileName << "_accuracy-";
 	fileName << accuracy;
+	fileName << ".weights";
 	return fileName.str();
 }
 
@@ -259,5 +266,4 @@ double MatrixNeuralNetwork::GetMeanError(std::vector<double> & errors) const
 	result /= static_cast<double>(errors.size());
 	return result;
 }
-
 

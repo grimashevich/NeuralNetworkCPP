@@ -1,7 +1,7 @@
 #include "DataSet.h"
 #include "StopWatch.h"
 
-DataSet::DataSet(int inputSize, int answerSize): rng(std::random_device{}())
+DataSet::DataSet(size_t inputSize, size_t answerSize): rng(std::random_device{}())
 {
 	this->inputSize = inputSize;
 	this->outputSize = answerSize;
@@ -14,7 +14,7 @@ size_t DataSet::Size() const
 	return trainInputs.size();
 }
 
-void DataSet::LoadFromCSV(std::string& filePath, char delimiter, int lineLimit, bool skipFirstLine)
+void DataSet::LoadFromCSV(std::string& filePath, char delimiter, size_t lineLimit, bool skipFirstLine)
 {
 	//TODO Check is file exist and readable
 	std::ifstream csvFile(filePath);

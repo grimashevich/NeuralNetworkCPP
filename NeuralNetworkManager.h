@@ -11,9 +11,10 @@ class NeuralNetworkManager
 {
 public:
 	NeuralNetworkManager();
-	void LoadMatrixNN(const std::vector<int> &topology);
-	void LoadGraphNN();
 
+	void LoadMatrixNN(const std::vector<int> &topology);
+
+	void LoadGraphNN();
 	double GetAccuracy() const;
 	double getPrecision() const;
 	double getRecall() const;
@@ -22,9 +23,15 @@ public:
 	float GetValidationPartOfTrainingDataset() const;
 	void SetValidationPartOfTrainingDataset(float newValue);
 
-	void Train(int numEpochs);
-
+	void LoadTrainSet(std::string & fileName, size_t inputSize, size_t outputSize, size_t objectLimit = 0);
+	void Train(int numEpochs, double learningRate);
+	void LoadWeightToNetwork(const std::string& fileName);
+	void SaveWeightFromNetwork(double curAccuracy, size_t epochNum, const std::string& alterFileName);
+	size_t Predict(std::vector<double> inputSignal, int answerOffset, bool needNormalize);
 	~NeuralNetworkManager();
+
+
+	DataSet *trainingSet = nullptr;
 
 private:
 	int inputSizeNN = 0;
@@ -32,14 +39,11 @@ private:
 
 	//Neural network and datasets
 	NeuralNetworkBase *neuralNetwork = nullptr;
-	DataSet *trainingSet = nullptr;
+
 	DataSet *testSet = nullptr;
 
 	//Training and dataset setting
 	float validationPartOfTrainingDataset = 0.2;
-
-
-private:
 	size_t trainDatasetObjectLimit = 0;
 
 	// Metrics
@@ -48,6 +52,8 @@ private:
 	double recall = 0;
 	double fMeasure = 0;
 	double error = 0;
+
+	void CrutchNormalzation(std::vector<double> & signal);
 };
 
 

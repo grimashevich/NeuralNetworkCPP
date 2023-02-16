@@ -17,7 +17,7 @@ public:
 	double Train(const std::vector<std::vector<double>>& inputs,
 				 const std::vector<std::vector<double>>& targets, int numEpochs) override;
 	std::vector<double> Predict(const std::vector<double>& input) override;
-	void SaveWeight(double accuracy, int epoch) override;
+	void SaveWeights(double accuracy, int epoch, std::string fName) override;
 	void LoadWeight(std::string fileName) override;
 
 	std::vector<std::vector<std::vector<double>>> weights;

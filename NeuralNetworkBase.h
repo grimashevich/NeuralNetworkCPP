@@ -3,6 +3,10 @@
 
 #include <vector>
 #include <random>
+#include <iostream>
+#include <string>
+#include <cstdio>
+#include <ctime>
 
 class NeuralNetworkBase
 {
@@ -11,7 +15,7 @@ public:
 						 const std::vector<std::vector<double>>& targets,
 						 int numEpochs) = 0;
 	virtual std::vector<double> Predict(const std::vector<double>& input) = 0;
-	virtual void SaveWeight(double accuracy, int epoch) = 0;
+	virtual void SaveWeights(double accuracy, int epoch, std::string fName) = 0;
 	virtual void LoadWeight(std::string fileName) = 0;
 
 	void SetLearningRate(double newLearningRate);
@@ -21,6 +25,7 @@ public:
 	[[nodiscard]] double GetLearningRate() const;
 
 	virtual ~NeuralNetworkBase();
+	static const std::string currentDateTime();
 
 protected:
 	double learningRate{0.02};

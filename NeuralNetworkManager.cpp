@@ -58,7 +58,7 @@ NeuralNetworkManager::~NeuralNetworkManager()
 	delete testSet;
 }
 
-void NeuralNetworkManager::Train(int numEpochs)
+void NeuralNetworkManager::Train(int numEpochs, double learningRate)
 {
 	if (neuralNetwork == nullptr)
 		throw std::runtime_error("No neural network loaded for training");
@@ -67,6 +67,7 @@ void NeuralNetworkManager::Train(int numEpochs)
 	if ((int)((float)trainingSet->trainInputs.size() * validationPartOfTrainingDataset) <= 0)
 		throw std::runtime_error("There is not enough data in the training set to create a validation set.");
 
+	neuralNetwork->SetLearningRate(learningRate);
 	trainingSet->SetValidationPartRatio(validationPartOfTrainingDataset);
 	trainingSet->Shuffle();
 	double meanError = neuralNetwork->Train(trainingSet->trainInputs, trainingSet->trainTargets, numEpochs);
@@ -86,3 +87,52 @@ void NeuralNetworkManager::SetValidationPartOfTrainingDataset(float newValue)
 	NeuralNetworkManager::validationPartOfTrainingDataset = newValue;
 }
 
+void NeuralNetworkManager::CrutchNormalzation(std::vector<double> &signal)
+{
+	//TODO Заменить на метод из Датасета
+	for (double & item: signal)
+	{
+		if (item > 64)
+			item = 1;
+		else
+			item = 0;
+	}
+}
+
+
+size_t NeuralNetworkManager::Predict(std::vector<double> inputSignal, int answerOffset, bool needNormalize)
+{
+	size_t result;
+	std::vector<double> networkAnswer;
+
+	if (needNormalize)
+		CrutchNormalzation(inputSignal);
+	networkAnswer = neuralNetwork->Predict(inputSignal);
+	result = std::max_element(networkAnswer.begin(),networkAnswer.end()) - networkAnswer.begin();
+	return result + answerOffset;
+}
+
+void NeuralNetworkManager::LoadTrainSet(std::string & fileName, size_t inputSize, size_t outputSize, size_t objectLimit)
+{
+	if (inputSize && outputSize == 0)
+		throw std::invalid_argument("inputSize and outputSize should be positive");
+	delete trainingSet;
+	trainingSet = new DataSet(inputSize, outputSize);
+	trainingSet->SetValidationPartRatio(validationPartOfTrainingDataset);
+	trainingSet->LoadFromCSV(fileName, ',', objectLimit, false);
+	trainingSet->MoveToTestSet(validationPartOfTrainingDataset);
+}
+
+void NeuralNetworkManager::LoadWeightToNetwork(const std::string& fileName)
+{
+	if (neuralNetwork == nullptr)
+		throw std::runtime_error("Neural network is not loaded");
+	neuralNetwork->LoadWeight(fileName);
+}
+
+void NeuralNetworkManager::SaveWeightFromNetwork(double curAccuracy, size_t epochNum, const std::string& alterFileName)
+{
+	if (neuralNetwork == nullptr)
+		throw std::runtime_error("Neural network is not loaded");
+	neuralNetwork->SaveWeights(curAccuracy, epochNum, alterFileName);
+}

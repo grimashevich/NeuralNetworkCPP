@@ -4,6 +4,7 @@
 #include "DataSet.h"
 #include "StopWatch.h"
 #include <thread>
+#include "NeuralNetworkManager.h"
 
 void PrintTopology(std::vector<int> topology)
 {
@@ -95,14 +96,14 @@ void testSaveAndLoadWeight()
 			bias = i++;
 		}
 	}
-	nn->SaveWeight(0, 0);
+	nn->SaveWeights(0, 0, "");
 	delete nn;
 	nn = new MatrixNeuralNetwork(topology);
 	nn->LoadWeight("/Users/eclown/Desktop/projects/NeuralNetworkCPP/cmake-build-debug/NN_weights_5-4-3-2_epoch-0_accuracy-0");
 	nn->Sigmoid(1);
 }
 
-int main(int argc, char *argv[])
+int main2(int argc, char *argv[])
 {
 
 	//testSaveAndLoadWeight();
@@ -133,7 +134,7 @@ int main(int argc, char *argv[])
 	std::vector<int> topology = { 784, 151, 75, 26 };
 	NeuralNetworkBase *nn = new MatrixNeuralNetwork(topology);
 	//neuralNetwork.LoadWeight("NN_weights_5-4-3-2_epoch-0_accuracy-0");
-	//neuralNetwork.SaveWeight(0, 0);
+	//neuralNetwork.SaveWeights(0, 0);
 	nn->SetLearningRate(learningRate);
 	std::cout << "Neural network initialized in " <<  sw.Restart() << std::endl;
 
@@ -173,9 +174,60 @@ int main(int argc, char *argv[])
 		std::cout << "epoch " << i << " done in " << sw.Stop() << " ";
 		double accuracy = CheckTestSet(testSetInput, testSetAnswers, nn);
 		if (accuracy > 50.0)
-			nn->SaveWeight(accuracy, i);
+			nn->SaveWeights(accuracy, i, "");
 		ts.Shuffle();
 		nn->SetLearningRate(nn->GetLearningRate() * learningRateRatio);
 	}
+	return 0;
+}
+
+int main()
+{
+	NeuralNetworkManager nnm = NeuralNetworkManager();
+
+	std::string  trainSetFileName = "../emnist-letters-train.csv";
+	nnm.LoadTrainSet(trainSetFileName, 784, 26, 10000);
+
+	std::vector<int> topology = { 784, 151, 75, 26 };
+	nnm.LoadMatrixNN(topology);
+	nnm.SetValidationPartOfTrainingDataset(0.2);
+
+
+	nnm.LoadWeightToNetwork("NN_weights_784-151-75-26_epoch-1_accuracy-62.2905");
+
+	/*
+	//ОБУЧЕНИЕ
+	StopWatch sw;
+	sw.Start();
+
+
+	std::vector<double> learningRatios {0.09, 0.08, 0.07, 0.06, 0.05, 0.04, 0.03, 0.025, 0.02, 0.015};
+	//std::vector<double> learningRatios {0.05, 0.04, 0.03, 0.025, 0.02, 0.015};
+	for (int i = 0; i <learningRatios.size(); ++i)
+	{
+		nnm.Train(1, learningRatios[i]);
+		std::cout << "Error: " << nnm.getError() << std::endl;
+	}
+
+
+	nnm.SaveWeightFromNetwork(0, 0, "NN_weights_784-500-405-26_epoch-17_accuracy-93.4234");
+	std::cout << "Training complete in " << sw.Stop()  << std::endl;
+	*/
+
+	size_t result;
+	size_t trueAnswer;
+	int totalTests = 1000;
+	int rightAnswers = 0;
+	for (int i = 0; i < totalTests; ++i)
+	{
+		result = nnm.Predict(nnm.trainingSet->trainInputs[i], 1, false);
+		auto _tmp = nnm.trainingSet->trainTargets[i];
+		trueAnswer = std::max_element(_tmp.begin(),_tmp.end()) - _tmp.begin() + 1;
+		std::cout << "Predicted: " << result << " | True: " << trueAnswer << std::endl;
+		if (trueAnswer == result)
+			rightAnswers++;
+	}
+	std::cout << "- - - - -" << std::endl << "right: " << rightAnswers << " from " << totalTests << std::endl;
+
 
 }
