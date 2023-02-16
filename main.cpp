@@ -56,14 +56,14 @@ double CheckTestSet(std::vector<std::vector<double>>& TestInputs,
 
 void checkTestSet()
 {
-	std::string weightFileName = "/Users/eclown/Desktop/projects/NeuralNetworkCPP/cmake-build-debug/NN_weights_784-151-75-26_epoch-4_accuracy-80.7658";
+	std::string weightFileName = "NN_weights_784-59-39-26_epoch-11_accuracy-78.1892";
 
 	//std::string testSetFileName = "/Users/eclown/Desktop/projects/NeuralNetworkCPP/emnist-letters-train.csv";
 
-	std::string testSetFileName = "/Users/eclown/Desktop/projects/NeuralNetworkCPP/emnist-letters-test.csv";
+	std::string testSetFileName = "../emnist-letters-test.csv";
 	DataSet testSet = DataSet(784, 26);
 	testSet.LoadFromCSV(testSetFileName, ',', 0, false);
-	std::vector<int> topology = { 784, 151, 75, 26 };
+	std::vector<int> topology = { 784, 59, 39, 26 };
 	NeuralNetworkBase *nn = new MatrixNeuralNetwork(topology);
 	nn->LoadWeight(weightFileName);
 
@@ -125,12 +125,12 @@ int main(int argc, char *argv[])
 
 	StopWatch sw = StopWatch();
 	sw.Start();
-	std::string fileName = std::string("/Users/eclown/Desktop/projects/NeuralNetworkCPP/emnist-letters-train.csv");
+	std::string fileName = std::string("../emnist-letters-train.csv");
 	if (argc >= 4)
 		fileName = argv[3];
 	//std::string fileName = std::string("/Users/user/Desktop/projects/NN/emnist-letters-Train.csv");
 
-	std::vector<int> topology = { 784, 59, 39, 26 };
+	std::vector<int> topology = { 784, 151, 75, 26 };
 	NeuralNetworkBase *nn = new MatrixNeuralNetwork(topology);
 	//neuralNetwork.LoadWeight("NN_weights_5-4-3-2_epoch-0_accuracy-0");
 	//neuralNetwork.SaveWeight(0, 0);
@@ -138,10 +138,10 @@ int main(int argc, char *argv[])
 	std::cout << "Neural network initialized in " <<  sw.Restart() << std::endl;
 
 
-	std::string testSetFileName = "/Users/eclown/Desktop/projects/NeuralNetworkCPP/emnist-letters-test.csv";
-	DataSet testSet = DataSet(784, 26);
-	testSet.LoadFromCSV(testSetFileName, ',', 0, false);
-	std::cout << "Test set loaded in ... " <<  sw.Restart() << std::endl;
+//	std::string testSetFileName = "../emnist-letters-test.csv";
+//	DataSet testSet = DataSet(784, 26);
+//	testSet.LoadFromCSV(testSetFileName, ',', 0, false);
+//	std::cout << "Test set loaded in ... " <<  sw.Restart() << std::endl;
 
 	DataSet ts = DataSet(784, 26);
 	ts.LoadFromCSV(fileName, ',', 0, false);
@@ -149,8 +149,8 @@ int main(int argc, char *argv[])
 	ts.Shuffle();
 	std::cout << "Train set loaded in ... " <<  sw.Restart() << std::endl;
 
-	auto testSetInput = testSet.inputSignals;
-	auto testSetAnswers = testSet.answers;
+	auto testSetInput = ts.testSetInputSignals;
+	auto testSetAnswers = ts.testSetAnswers;
 
 
     std::cout << "- - - - - - - - - - - -" << std::endl;
@@ -166,7 +166,7 @@ int main(int argc, char *argv[])
     CheckTestSet(testSetInput, testSetAnswers, nn);
     std::cout << std::endl;
     ts.Shuffle();
-	for (int i = 0; i < 50; ++i)
+	for (int i = 1; i <= 50; ++i)
 	{
 		sw.Start();
 		nn->Train(ts.inputSignals, ts.answers, 1);
