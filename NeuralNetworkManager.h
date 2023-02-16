@@ -6,6 +6,7 @@
 #include "MatrixNeuralNetwork.h"
 #include "DataSet.h"
 #include "StopWatch.h"
+#include <filesystem>
 
 class NeuralNetworkManager
 {
@@ -52,6 +53,8 @@ private:
 	double recall = 0;
 	double fMeasure = 0;
 	double error = 0;
+
+    static bool fileExistAndReadable(const std::string &fileName);
 
 	void CrutchNormalzation(std::vector<double> & signal);
 };

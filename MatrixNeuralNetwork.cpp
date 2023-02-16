@@ -262,7 +262,7 @@ double MatrixNeuralNetwork::GetMeanError(std::vector<double> & errors) const
 		return 0;
 
 	for (int i = 0; i < errors.size(); ++i)
-		result += abs(errors[i]);
+		result += std::abs(errors[i]);
 	result /= static_cast<double>(errors.size());
 	return result;
 }

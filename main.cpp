@@ -186,16 +186,16 @@ int main()
 	NeuralNetworkManager nnm = NeuralNetworkManager();
 
 	std::string  trainSetFileName = "../emnist-letters-train.csv";
-	nnm.LoadTrainSet(trainSetFileName, 784, 26, 10000);
+	nnm.LoadTrainSet(trainSetFileName, 784, 26, 20000);
 
 	std::vector<int> topology = { 784, 151, 75, 26 };
 	nnm.LoadMatrixNN(topology);
 	nnm.SetValidationPartOfTrainingDataset(0.2);
 
 
-	nnm.LoadWeightToNetwork("NN_weights_784-151-75-26_epoch-1_accuracy-62.2905");
+	nnm.LoadWeightToNetwork("NN_weights_81-in-5000-records");
 
-	/*
+/*
 	//ОБУЧЕНИЕ
 	StopWatch sw;
 	sw.Start();
@@ -212,7 +212,7 @@ int main()
 
 	nnm.SaveWeightFromNetwork(0, 0, "NN_weights_784-500-405-26_epoch-17_accuracy-93.4234");
 	std::cout << "Training complete in " << sw.Stop()  << std::endl;
-	*/
+*/
 
 	size_t result;
 	size_t trueAnswer;

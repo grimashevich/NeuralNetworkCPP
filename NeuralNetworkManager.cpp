@@ -17,7 +17,7 @@ void NeuralNetworkManager::LoadMatrixNN(const std::vector<int> &topology)
 	neuralNetwork = new MatrixNeuralNetwork(topology);
 	inputSizeNN = topology[0];
 	outputSizeNN = topology[topology.size() - 1];
-	if (trainingSet->GetInputSize() != inputSizeNN || trainingSet->GetOutputSize() != outputSizeNN)
+	if (trainingSet != nullptr && (trainingSet->GetInputSize() != inputSizeNN || trainingSet->GetOutputSize() != outputSizeNN))
 	{
 		delete trainingSet;
 		delete testSet;
@@ -125,6 +125,8 @@ void NeuralNetworkManager::LoadTrainSet(std::string & fileName, size_t inputSize
 
 void NeuralNetworkManager::LoadWeightToNetwork(const std::string& fileName)
 {
+    if (!fileExistAndReadable(fileName))
+        throw std::invalid_argument("Weights file not found " + fileName);
 	if (neuralNetwork == nullptr)
 		throw std::runtime_error("Neural network is not loaded");
 	neuralNetwork->LoadWeight(fileName);
@@ -135,4 +137,22 @@ void NeuralNetworkManager::SaveWeightFromNetwork(double curAccuracy, size_t epoc
 	if (neuralNetwork == nullptr)
 		throw std::runtime_error("Neural network is not loaded");
 	neuralNetwork->SaveWeights(curAccuracy, epochNum, alterFileName);
+}
+
+bool NeuralNetworkManager::fileExistAndReadable(const std::string &fileName)
+{
+    bool fileIsOk;
+    fileIsOk = std::filesystem::exists(fileName);
+    fileIsOk = fileIsOk && std::filesystem::is_regular_file(fileName);
+    if (fileIsOk)
+    {
+        std::ifstream file(fileName);
+        if (file.is_open())
+        {
+            file.close();
+            return true;
+        }
+
+    }
+    return false;
 }
