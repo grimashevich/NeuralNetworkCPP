@@ -189,18 +189,21 @@ int main()
 	//trainSetFileName = "../emnist-letters-test.csv";s
 
 
-	nnm.SetValidationPartOfTrainingDataset(0.0);
-	nnm.LoadTrainSet(trainSetFileName, 784, 26, 100);
-	nnm.CalculateMetricsForTestSet(nnm.trainingSet->trainInputs, nnm.trainingSet->trainTargets, 3);
-	return 0;
-
-	std::vector<int> topology = { 784, 500, 405, 26 };
+	std::vector<int> topology = { 784, 151, 75, 26 };
 	nnm.LoadMatrixNN(topology);
+	nnm.LoadWeightToNetwork("NN_weights_784-151-75-26_epoch-3_accuracy-73.0541");
 
-
-	nnm.LoadWeightToNetwork("../NN_weights_784-500-405-26_epoch-17_accuracy-93.weights");
+	nnm.SetValidationPartOfTrainingDataset(0.0);
+	nnm.LoadTrainSet(trainSetFileName, 784, 26, 5);
 
 	StopWatch sw;
+	sw.Start();
+	nnm.CalculateMetricsForTestSet(nnm.trainingSet->trainInputs,
+								   nnm.trainingSet->trainTargets,1);
+	std::cout << sw.Stop() << std::endl;
+	return 0;
+
+
 
 /*
 	//ОБУЧЕНИЕ

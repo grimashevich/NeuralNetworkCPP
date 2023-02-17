@@ -159,15 +159,15 @@ bool NeuralNetworkManager::fileExistAndReadable(const std::string &fileName)
     return false;
 }
 
-void NeuralNetworkManager::CalculateMetricsForTestSet(const std::vector<std::vector<double>> &testInputs,
-													  const std::vector<std::vector<double>> &testTargets,
+void NeuralNetworkManager::CalculateMetricsForTestSet(const std::vector<std::vector<double>> & testInputs,
+													  const std::vector<std::vector<double>> & testTargets,
 													  size_t threadsNum)
 {
 	size_t dataSetSize = testInputs.size();
 	std::vector<std::thread> threads;
-	std::vector<std::vector<std::vector<int>>> results(
-			threadsNum,std::vector<std::vector<int>>(
-					testTargets[0].size(), std::vector<int>(2)));
+	std::vector<std::vector<std::vector<size_t>>> results(
+			threadsNum,std::vector<std::vector<size_t>>(
+					testTargets[0].size(), std::vector<size_t>(2)));
 
 	size_t pieceSize = dataSetSize / threadsNum;
 	for (int i = 0; i < threadsNum; ++i)
@@ -176,17 +176,38 @@ void NeuralNetworkManager::CalculateMetricsForTestSet(const std::vector<std::vec
 		size_t toIndex = ((i + 1) * pieceSize); //will be not included
 		if (i == threadsNum - 1)
 			toIndex = dataSetSize;
-		threads.emplace_back(std::thread(PredictMT,  testInputs, testTargets, fromIndex, toIndex, 0, false, results[i], neuralNetwork));
 
-
+		threads.emplace_back(PredictMT,  testInputs, testTargets, fromIndex, toIndex, 0, false, std::ref(results[i]), neuralNetwork);
 	}
+	for (int i = 0; i < threadsNum; ++i)
+		threads[i].join();
+
+	std::vector<std::vector<size_t>> finalResult(std::vector<std::vector<size_t>>(testTargets[0].size(), std::vector<size_t>(2)));
+	size_t totalRight = 0;
+	size_t totalWrong = 0;
+	for (int i = 0; i < results.size(); ++i)
+	{
+		for (int j = 0; j < results[i].size(); ++j)
+		{
+			finalResult[j][0] += results[i][j][0];
+			finalResult[j][1] += results[i][j][1];
+			totalRight += results[i][j][0];
+			totalWrong += results[i][j][1];
+		}
+	}
+
+
+	dataSetSize++; //delete
 
 }
 
 void NeuralNetworkManager::PredictMT(const std::vector<std::vector<double>> &inputs,
 									 const std::vector<std::vector<double>> &targets,
-									 size_t fromIndex, size_t toIndex, int answerOffset,
-									 bool needNormalize, std::vector<std::vector<size_t>> & result,
+									 size_t fromIndex,
+									 size_t toIndex,
+									 int answerOffset,
+									 bool needNormalize,
+									 std::vector<std::vector<size_t>> & result,
 									 NeuralNetworkBase *nn)
 {
 	for (size_t i = fromIndex; i < toIndex; ++i)
@@ -199,5 +220,6 @@ void NeuralNetworkManager::PredictMT(const std::vector<std::vector<double>> &inp
 		else
 			result[true_answer][1]++;
 	}
+	//TODO CHECK HERE
 }
 
