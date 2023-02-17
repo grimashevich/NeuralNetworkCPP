@@ -116,6 +116,8 @@ void NeuralNetworkManager::LoadTrainSet(std::string & fileName, size_t inputSize
 {
 	if (inputSize && outputSize == 0)
 		throw std::invalid_argument("inputSize and outputSize should be positive");
+	if (!fileExistAndReadable(fileName))
+		throw std::invalid_argument("Dataset file not found " + fileName);
 	delete trainingSet;
 	trainingSet = new DataSet(inputSize, outputSize);
 	trainingSet->SetValidationPartRatio(validationPartOfTrainingDataset);
@@ -156,3 +158,46 @@ bool NeuralNetworkManager::fileExistAndReadable(const std::string &fileName)
     }
     return false;
 }
+
+void NeuralNetworkManager::CalculateMetricsForTestSet(const std::vector<std::vector<double>> &testInputs,
+													  const std::vector<std::vector<double>> &testTargets,
+													  size_t threadsNum)
+{
+	size_t dataSetSize = testInputs.size();
+	std::vector<std::thread> threads;
+	std::vector<std::vector<std::vector<int>>> results(
+			threadsNum,std::vector<std::vector<int>>(
+					testTargets[0].size(), std::vector<int>(2)));
+
+	size_t pieceSize = dataSetSize / threadsNum;
+	for (int i = 0; i < threadsNum; ++i)
+	{
+		size_t fromIndex = (i * pieceSize);
+		size_t toIndex = ((i + 1) * pieceSize); //will be not included
+		if (i == threadsNum - 1)
+			toIndex = dataSetSize;
+		threads.emplace_back(std::thread(PredictMT,  testInputs, testTargets, fromIndex, toIndex, 0, false, results[i], neuralNetwork));
+
+
+	}
+
+}
+
+void NeuralNetworkManager::PredictMT(const std::vector<std::vector<double>> &inputs,
+									 const std::vector<std::vector<double>> &targets,
+									 size_t fromIndex, size_t toIndex, int answerOffset,
+									 bool needNormalize, std::vector<std::vector<size_t>> & result,
+									 NeuralNetworkBase *nn)
+{
+	for (size_t i = fromIndex; i < toIndex; ++i)
+	{
+		std::vector<double> answerVector = nn->Predict(inputs[i]);
+		size_t answer = std::max_element(answerVector.begin(),answerVector.end()) - answerVector.begin();
+		size_t true_answer = std::max_element(targets[i].begin(), targets[i].end()) - targets[i].begin();
+		if (answer == true_answer)
+			result[true_answer][0]++;
+		else
+			result[true_answer][1]++;
+	}
+}
+

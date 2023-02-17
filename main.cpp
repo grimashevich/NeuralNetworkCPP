@@ -186,18 +186,24 @@ int main()
 	NeuralNetworkManager nnm = NeuralNetworkManager();
 
 	std::string  trainSetFileName = "../emnist-letters-train.csv";
-	nnm.LoadTrainSet(trainSetFileName, 784, 26, 20000);
+	//trainSetFileName = "../emnist-letters-test.csv";s
 
-	std::vector<int> topology = { 784, 151, 75, 26 };
+
+	nnm.SetValidationPartOfTrainingDataset(0.0);
+	nnm.LoadTrainSet(trainSetFileName, 784, 26, 100);
+	nnm.CalculateMetricsForTestSet(nnm.trainingSet->trainInputs, nnm.trainingSet->trainTargets, 3);
+	return 0;
+
+	std::vector<int> topology = { 784, 500, 405, 26 };
 	nnm.LoadMatrixNN(topology);
-	nnm.SetValidationPartOfTrainingDataset(0.2);
 
 
-	nnm.LoadWeightToNetwork("NN_weights_81-in-5000-records");
+	nnm.LoadWeightToNetwork("../NN_weights_784-500-405-26_epoch-17_accuracy-93.weights");
+
+	StopWatch sw;
 
 /*
 	//ОБУЧЕНИЕ
-	StopWatch sw;
 	sw.Start();
 
 
@@ -210,24 +216,26 @@ int main()
 	}
 
 
-	nnm.SaveWeightFromNetwork(0, 0, "NN_weights_784-500-405-26_epoch-17_accuracy-93.4234");
+	nnm.SaveWeightFromNetwork(0, 0, "NN_weights_784-500-405-26_epoch-17_accuracy-93.weights");
 	std::cout << "Training complete in " << sw.Stop()  << std::endl;
 */
 
+	sw.Start();
 	size_t result;
 	size_t trueAnswer;
-	int totalTests = 1000;
+	size_t totalTests = nnm.trainingSet->trainInputs.size();
 	int rightAnswers = 0;
 	for (int i = 0; i < totalTests; ++i)
 	{
 		result = nnm.Predict(nnm.trainingSet->trainInputs[i], 1, false);
 		auto _tmp = nnm.trainingSet->trainTargets[i];
 		trueAnswer = std::max_element(_tmp.begin(),_tmp.end()) - _tmp.begin() + 1;
-		std::cout << "Predicted: " << result << " | True: " << trueAnswer << std::endl;
+		//std::cout << "Predicted: " << result << " | True: " << trueAnswer << std::endl;
 		if (trueAnswer == result)
 			rightAnswers++;
 	}
 	std::cout << "- - - - -" << std::endl << "right: " << rightAnswers << " from " << totalTests << std::endl;
+	std::cout <<  "Done in " << sw.Stop() << std::endl;
 
 
 }

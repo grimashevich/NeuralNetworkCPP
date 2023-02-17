@@ -7,6 +7,7 @@
 #include "DataSet.h"
 #include "StopWatch.h"
 #include <filesystem>
+#include <thread>
 
 class NeuralNetworkManager
 {
@@ -29,6 +30,18 @@ public:
 	void LoadWeightToNetwork(const std::string& fileName);
 	void SaveWeightFromNetwork(double curAccuracy, size_t epochNum, const std::string& alterFileName);
 	size_t Predict(std::vector<double> inputSignal, int answerOffset, bool needNormalize);
+
+	static void PredictMT(const std::vector<std::vector<double>> &inputs,
+						  const std::vector<std::vector<double>> &targets,
+						  size_t fromIndex, size_t toIndex, int answerOffset,
+						  bool needNormalize, std::vector<std::vector<size_t>> & result,
+						  NeuralNetworkBase *nn);
+
+	void CalculateMetricsForTestSet(const std::vector<std::vector<double>> &testInputs,
+									const std::vector<std::vector<double>> &testTargets, size_t threadsNum = 2);
+
+
+
 	~NeuralNetworkManager();
 
 
