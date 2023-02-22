@@ -58,7 +58,7 @@ NeuralNetworkManager::~NeuralNetworkManager()
 	delete testSet;
 }
 
-void NeuralNetworkManager::Train(int numEpochs, double learningRate)
+void NeuralNetworkManager::trainWithMiniBatches(double learningRate, double batchSize, int threadsCount)
 {
 	if (neuralNetwork == nullptr)
 		throw std::runtime_error("No neural network loaded for training");
@@ -70,9 +70,28 @@ void NeuralNetworkManager::Train(int numEpochs, double learningRate)
 	neuralNetwork->SetLearningRate(learningRate);
 	trainingSet->SetValidationPartRatio(validationPartOfTrainingDataset);
 	trainingSet->Shuffle();
-	double meanError = neuralNetwork->Train(trainingSet->trainInputs, trainingSet->trainTargets, numEpochs);
+	double meanError = neuralNetwork->trainWithMiniBatches(trainingSet->trainInputs,
+                                                           trainingSet->trainTargets,
+                                                           batchSize, threadsCount);
 	error = meanError;
 	//todo update metrics
+}
+
+void NeuralNetworkManager::Train(int numEpochs, double learningRate)
+{
+    if (neuralNetwork == nullptr)
+        throw std::runtime_error("No neural network loaded for training");
+    if (trainingSet == nullptr || trainingSet->trainInputs.empty())
+        throw std::runtime_error("No training set loaded for training");
+    if ((int)((float)trainingSet->trainInputs.size() * validationPartOfTrainingDataset) <= 0)
+        throw std::runtime_error("There is not enough data in the training set to create a validation set.");
+
+    neuralNetwork->SetLearningRate(learningRate);
+    trainingSet->SetValidationPartRatio(validationPartOfTrainingDataset);
+    trainingSet->Shuffle();
+    double meanError = neuralNetwork->Train(trainingSet->trainInputs, trainingSet->trainTargets, numEpochs);
+    error = meanError;
+    //todo update metrics
 }
 
 float NeuralNetworkManager::GetValidationPartOfTrainingDataset() const
@@ -122,7 +141,7 @@ void NeuralNetworkManager::LoadTrainSet(std::string & fileName, size_t inputSize
 	trainingSet = new DataSet(inputSize, outputSize);
 	trainingSet->SetValidationPartRatio(validationPartOfTrainingDataset);
 	trainingSet->LoadFromCSV(fileName, ',', objectLimit, false);
-	trainingSet->MoveToTestSet(validationPartOfTrainingDataset);
+    trainingSet->MoveToValidationSet(validationPartOfTrainingDataset);
 }
 
 void NeuralNetworkManager::LoadWeightToNetwork(const std::string& fileName)
@@ -169,6 +188,7 @@ void NeuralNetworkManager::CalculateMetricsForTestSet(const std::vector<std::vec
 			threadsNum,std::vector<std::vector<size_t>>(
 					testTargets[0].size(), std::vector<size_t>(2)));
 
+    std::mutex m;
 	size_t pieceSize = dataSetSize / threadsNum;
 	for (int i = 0; i < threadsNum; ++i)
 	{
@@ -177,7 +197,16 @@ void NeuralNetworkManager::CalculateMetricsForTestSet(const std::vector<std::vec
 		if (i == threadsNum - 1)
 			toIndex = dataSetSize;
 
-		threads.emplace_back(PredictMT,  testInputs, testTargets, fromIndex, toIndex, 0, false, std::ref(results[i]), neuralNetwork);
+		threads.emplace_back(PredictMT,
+                             testInputs,
+                             testTargets,
+                             fromIndex,
+                             toIndex,
+                             0,
+                             false,
+                             std::ref(results[i]),
+                             neuralNetwork,
+                             std::ref(m));
 	}
 	for (int i = 0; i < threadsNum; ++i)
 		threads[i].join();
@@ -195,10 +224,10 @@ void NeuralNetworkManager::CalculateMetricsForTestSet(const std::vector<std::vec
 			totalWrong += results[i][j][1];
 		}
 	}
-
-
-	dataSetSize++; //delete
-
+    accuracy = (float)totalRight / (float)(totalRight + totalWrong);
+/*    std::cout << "Total wrong: " << totalWrong << std::endl;
+    std::cout << "Total right: " << totalRight << std::endl;
+    std::cout << "Accuracy: " << ((float)totalRight / (float)(totalRight + totalWrong)) * 100 << "%" << std::endl;*/
 }
 
 void NeuralNetworkManager::PredictMT(const std::vector<std::vector<double>> &inputs,
@@ -208,18 +237,33 @@ void NeuralNetworkManager::PredictMT(const std::vector<std::vector<double>> &inp
 									 int answerOffset,
 									 bool needNormalize,
 									 std::vector<std::vector<size_t>> & result,
-									 NeuralNetworkBase *nn)
+									 NeuralNetworkBase *nn,
+                                     std::mutex & m)
 {
+    float right = 0;
+    float wrong = 0;
+    auto newLayers = nn->layers;
 	for (size_t i = fromIndex; i < toIndex; ++i)
 	{
-		std::vector<double> answerVector = nn->Predict(inputs[i]);
-		size_t answer = std::max_element(answerVector.begin(),answerVector.end()) - answerVector.begin();
+        std::vector<double> answerVector = nn->PredictMT(inputs[i], newLayers);
+
+        size_t answer = std::max_element(answerVector.begin(),answerVector.end()) - answerVector.begin();
 		size_t true_answer = std::max_element(targets[i].begin(), targets[i].end()) - targets[i].begin();
+
 		if (answer == true_answer)
+        {
 			result[true_answer][0]++;
+            right++;
+        }
 		else
+        {
 			result[true_answer][1]++;
+            wrong++;
+        }
 	}
-	//TODO CHECK HERE
+/*    m.lock();
+    std::cout << "right/wrong " << right << "/" << wrong << " " <<
+            (right / (right + wrong)) * 100 << "%" <<std::endl;
+    m.unlock();*/
 }
 

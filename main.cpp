@@ -129,7 +129,7 @@ int main2(int argc, char *argv[])
 	std::string fileName = std::string("../emnist-letters-train.csv");
 	if (argc >= 4)
 		fileName = argv[3];
-	//std::string fileName = std::string("/Users/user/Desktop/projects/NN/emnist-letters-Train.csv");
+	//std::string fileName = std::string("/Users/user/Desktop/projects/NN/emnist-letters-TrainOneBatch.csv");
 
 	std::vector<int> topology = { 784, 151, 75, 26 };
 	NeuralNetworkBase *nn = new MatrixNeuralNetwork(topology);
@@ -148,7 +148,7 @@ int main2(int argc, char *argv[])
 	ts.LoadFromCSV(fileName, ',', 1000, false);
 	ts.SetValidationPartRatio(0.9);
 	ts.Shuffle();
-	std::cout << "Train set loaded in ... " <<  sw.Restart() << std::endl;
+	std::cout << "TrainOneBatch set loaded in ... " <<  sw.Restart() << std::endl;
 
 	auto testSetInput = ts.validationInputs;
 	auto testSetAnswers = ts.validationTargets;
@@ -157,7 +157,7 @@ int main2(int argc, char *argv[])
     std::cout << "- - - - - - - - - - - -" << std::endl;
     std::cout << "Topology: ";
     PrintTopology(topology);
-    std::cout << "Train set size: " << ts.trainTargets.size() << std::endl;
+    std::cout << "TrainOneBatch set size: " << ts.trainTargets.size() << std::endl;
     std::cout << "Test set size: " << testSetInput.size() << std::endl;
     std::cout << "Learning rate: " << nn->GetLearningRate() << std::endl;
     std::cout << "Learning rate ratio: " << learningRateRatio << std::endl;
@@ -181,47 +181,71 @@ int main2(int argc, char *argv[])
 	return 0;
 }
 
+void sandBox()
+{
+    std::vector<std::vector<double>> test;
+    test.emplace_back(std::vector<double> {1, 2});
+    test.emplace_back(std::vector<double> {2, 3});
+
+    auto test2 = test;
+    for (auto & vec: test) {
+        vec = std::vector<double>(0, 1);
+    }
+    test.clear();
+}
+
 int main()
 {
+/*    sandBox();
+    return 0;*/
+
+
 	NeuralNetworkManager nnm = NeuralNetworkManager();
 
 	std::string  trainSetFileName = "../emnist-letters-train.csv";
 	//trainSetFileName = "../emnist-letters-test.csv";s
 
 
-	std::vector<int> topology = { 784, 151, 75, 26 };
+	std::vector<int> topology = { 784, 100, 50, 26 };
 	nnm.LoadMatrixNN(topology);
-	nnm.LoadWeightToNetwork("NN_weights_784-151-75-26_epoch-3_accuracy-73.0541");
+	//nnm.LoadWeightToNetwork("../NN_weights_784-500-405-26_epoch-17_accuracy-93.weights");
 
-	nnm.SetValidationPartOfTrainingDataset(0.0);
-	nnm.LoadTrainSet(trainSetFileName, 784, 26, 5);
+	nnm.SetValidationPartOfTrainingDataset(0.1);
+	nnm.LoadTrainSet(trainSetFileName, 784, 26, 5000);
 
 	StopWatch sw;
+/*
 	sw.Start();
 	nnm.CalculateMetricsForTestSet(nnm.trainingSet->trainInputs,
-								   nnm.trainingSet->trainTargets,1);
+								   nnm.trainingSet->trainTargets,16);
 	std::cout << sw.Stop() << std::endl;
-	return 0;
+	return 0;*/
 
 
 
-/*
+    nnm.CalculateMetricsForTestSet(nnm.trainingSet->trainInputs,
+                                   nnm.trainingSet->trainTargets,16);
+
+    std::cout << "Accuracy before learning: " << nnm.GetAccuracy() << std::endl;
+
 	//ОБУЧЕНИЕ
 	sw.Start();
-
-
-	std::vector<double> learningRatios {0.09, 0.08, 0.07, 0.06, 0.05, 0.04, 0.03, 0.025, 0.02, 0.015};
-	//std::vector<double> learningRatios {0.05, 0.04, 0.03, 0.025, 0.02, 0.015};
+	//std::vector<double> learningRatios {0.09, 0.08, 0.07, 0.06, 0.05, 0.04, 0.03, 0.025, 0.02, 0.015};
+	std::vector<double> learningRatios {0.005, 0.004, 0.003};
 	for (int i = 0; i <learningRatios.size(); ++i)
 	{
-		nnm.Train(1, learningRatios[i]);
-		std::cout << "Error: " << nnm.getError() << std::endl;
+		//nnm.Train(1, learningRatios[i]);
+        nnm.trainWithMiniBatches(learningRatios[i], 1, 16);
+
+        nnm.CalculateMetricsForTestSet(nnm.trainingSet->trainInputs,
+                                       nnm.trainingSet->trainTargets,16);
+
+		std::cout << "Accuracy: " << nnm.GetAccuracy() << " in " << sw.Restart() << std::endl;
 	}
 
 
 	nnm.SaveWeightFromNetwork(0, 0, "NN_weights_784-500-405-26_epoch-17_accuracy-93.weights");
 	std::cout << "Training complete in " << sw.Stop()  << std::endl;
-*/
 
 	sw.Start();
 	size_t result;

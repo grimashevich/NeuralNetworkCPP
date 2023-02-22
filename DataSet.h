@@ -20,7 +20,7 @@ public:
 	explicit DataSet(size_t inputSize, size_t answerSize);
 	size_t Size() const;
 	void LoadFromCSV(std::string& filePath, char delimiter, size_t lineLimit = 0, bool skipFirstLine = true);
-	void MoveToTestSet(float movePercentage);
+	void MoveToValidationSet(float movePercentage);
 	void ReturnTestSetToTrainSet();
 	int answerOffset = -1; // Смещение класса ответов в выборке (-1, если для 0-го класса в выборке ответ 1)
 	void Shuffle();

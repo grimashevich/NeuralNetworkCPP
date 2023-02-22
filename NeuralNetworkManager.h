@@ -8,6 +8,7 @@
 #include "StopWatch.h"
 #include <filesystem>
 #include <thread>
+#include <mutex>
 
 class NeuralNetworkManager
 {
@@ -27,19 +28,22 @@ public:
 
 	void LoadTrainSet(std::string & fileName, size_t inputSize, size_t outputSize, size_t objectLimit = 0);
 	void Train(int numEpochs, double learningRate);
+    void trainWithMiniBatches(double learningRate, double batchSize, int threadsCount);
 	void LoadWeightToNetwork(const std::string& fileName);
 	void SaveWeightFromNetwork(double curAccuracy, size_t epochNum, const std::string& alterFileName);
 	size_t Predict(std::vector<double> inputSignal, int answerOffset, bool needNormalize);
+
+
+	void CalculateMetricsForTestSet(const std::vector<std::vector<double>> &testInputs,
+									const std::vector<std::vector<double>> &testTargets,
+                                    size_t threadsNum = 2);
 
 	static void PredictMT(const std::vector<std::vector<double>> &inputs,
 						  const std::vector<std::vector<double>> &targets,
 						  size_t fromIndex, size_t toIndex, int answerOffset,
 						  bool needNormalize, std::vector<std::vector<size_t>> & result,
-						  NeuralNetworkBase *nn);
-
-	void CalculateMetricsForTestSet(const std::vector<std::vector<double>> &testInputs,
-									const std::vector<std::vector<double>> &testTargets, size_t threadsNum = 2);
-
+						  NeuralNetworkBase *nn,
+                          std::mutex & m);
 
 
 	~NeuralNetworkManager();

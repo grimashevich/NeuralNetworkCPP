@@ -31,6 +31,92 @@ double MatrixNeuralNetwork::Train(const std::vector<std::vector<double>>& inputs
 	return netError;
 }
 
+double MatrixNeuralNetwork::trainWithMiniBatches(const std::vector<std::vector<double>> &inputs,
+                                                 const std::vector<std::vector<double>> &targets,
+                                                 double batchSize, int threadsCount = 0)
+{
+    int bathSizeInt = static_cast<int>(batchSize);
+    if (batchSize < 0)
+        throw std::invalid_argument("Batch size must be >= 0");
+    else if (batchSize == 0)
+        bathSizeInt = static_cast<int>(inputs.size());
+    else if (batchSize  < 1)
+        bathSizeInt = std::floor(static_cast<double>(inputs.size()) * batchSize);
+    if (threadsCount <= 0)
+        threadsCount = static_cast<int>(std::thread::hardware_concurrency());
+    int batchCount = std::ceil(static_cast<double>(inputs.size()) / static_cast<double>(bathSizeInt));
+
+    std::vector<std::thread> threads;
+    std::mutex m;
+    int curStart = 0;
+    for (int i = 0; i < threadsCount; ++i)
+    {
+        int batchCountInOneThread = batchCount / threadsCount;
+        if (i < batchCount % threadsCount)
+            batchCountInOneThread++;
+        threads.emplace_back(&MatrixNeuralNetwork::TrainOneBatchLauncher, this, inputs, targets, curStart, bathSizeInt, batchCountInOneThread, std::ref(m));
+        curStart += batchCountInOneThread * (int) batchSize;
+    }
+    for (int i = 0; i < threadsCount; ++i)
+        threads[i].join();
+
+    return 0;
+}
+
+void MatrixNeuralNetwork::TrainOneBatchLauncher(const std::vector<std::vector<double>> &inputs,
+                                                const std::vector<std::vector<double>> &targets,
+                                                int startFrom, int batchSize, int batchCount, std::mutex &m)
+{
+    for (int i = 0; i < batchCount; ++i)
+        TrainOneBatch(inputs, targets, startFrom + batchSize * i, batchSize, m);
+}
+
+// Train one batch for multi thread method
+double MatrixNeuralNetwork::TrainOneBatch(const std::vector<std::vector<double>> &inputs,
+                                          const std::vector<std::vector<double>> &targets,
+                                          int batchStart, int batchSize, std::mutex &m)
+{
+    std::vector<std::vector<double>> meanErrors = std::vector<std::vector<double>>();
+    std::vector<std::vector<double>> meanActivation = std::vector<std::vector<double>>();
+    auto newLayers = layers;
+    int batchUpperLimit = std::min(batchStart + batchSize, (int) inputs.size());
+    for (int i = batchStart; i < batchUpperLimit; ++i)
+    {
+        std::vector<std::vector<double>> activations = ForwardFeedMT(inputs[i], newLayers);
+        auto errors = BackProp(activations, targets[i]);
+        addVectorValues(meanActivation, activations);
+        addVectorValues(meanErrors, errors);
+    }
+    divideEachElement(meanActivation, (double) batchSize);
+    //divideEachElement(meanErrors, (double) batchSize);
+    m.lock();
+    UpdateWeights(meanErrors, meanActivation);
+    UpdateBiases(meanErrors);
+    m.unlock();
+    return 0; //TODO calculate batch error
+}
+
+void MatrixNeuralNetwork::addVectorValues(std::vector<std::vector<double>> &source, std::vector<std::vector<double>> &summation)
+{
+    if (source.empty())
+        source = summation;
+    for (int i = 0; i < source.size(); ++i){
+        for (int j = 0; j < source[i].size(); ++j){
+            source[i][j] += summation[i][j];
+        }
+
+    }
+}
+
+void MatrixNeuralNetwork::divideEachElement(std::vector<std::vector<double>> &source, double divider)
+{
+    for (int i = 0; i < source.size(); ++i) {
+        for (int j = 0; j < source[i].size(); ++j) {
+            source[i][j] /= divider;
+        }
+    }
+}
+
 std::vector<double> MatrixNeuralNetwork::Predict(const std::vector<double>& input)
 {
 	std::vector<double> output = ForwardFeed(input).back();
@@ -47,7 +133,53 @@ std::vector<double> MatrixNeuralNetwork::Predict(const std::vector<double>& inpu
 	return output;
 }
 
+std::vector<double> MatrixNeuralNetwork::PredictMT(const std::vector<double>& input,
+                                                   std::vector<std::vector<double>> & layersCopy)
+{
+    std::vector<double> output = ForwardFeedMT(input, layersCopy).back();
+    double sum = 0;
+    for (int i = 0; i < output.size(); i++)
+    {
+        output[i] = exp(output[i]);
+        sum += output[i];
+    }
+    for (int i = 0; i < output.size(); i++)
+    {
+        output[i] /= sum;
+    }
+    return output;
+}
 
+std::vector<std::vector<double>> MatrixNeuralNetwork::ForwardFeedMT(const std::vector<double>& input,
+                                                                    std::vector<std::vector<double>> & layersCopy)
+{
+    layersCopy[0] = input;
+    for (int i = 1; i < topology.size(); i++) {
+        for (int j = 0; j < layersCopy[i].size(); j++) {
+            double sum = biases[i - 1][j];
+            for (int k = 0; k < layersCopy[i - 1].size(); k++) {
+                sum += layersCopy[i - 1][k] * weights[i - 1][j][k];
+            }
+            layersCopy[i][j] = Sigmoid(sum);
+        }
+    }
+    return layersCopy;
+}
+
+void MatrixNeuralNetwork::ForwardFeedMTBatch(const std::vector<double>& input,
+                                             std::vector<std::vector<double>> & sumLayersValue)
+{
+    sumLayersValue[0] = input;
+    for (int i = 1; i < topology.size(); i++) {
+        for (int j = 0; j < sumLayersValue[i].size(); j++) {
+            double sum = biases[i - 1][j];
+            for (int k = 0; k < sumLayersValue[i - 1].size(); k++) {
+                sum += sumLayersValue[i - 1][k] * weights[i - 1][j][k];
+            }
+            sumLayersValue[i][j] += Sigmoid(sum);
+        }
+    }
+}
 
 void MatrixNeuralNetwork::SaveWeights(double accuracy, int epoch, std::string fName)
 {
@@ -213,7 +345,8 @@ std::vector<std::vector<double>> MatrixNeuralNetwork::ForwardFeed(const std::vec
 	return layers;
 }
 
-std::vector<std::vector<double>> MatrixNeuralNetwork::BackProp(const std::vector<std::vector<double>> &activations, const std::vector<double> &target)
+std::vector<std::vector<double>> MatrixNeuralNetwork::BackProp(const std::vector<std::vector<double>> &activations,
+                                                               const std::vector<double> &target)
 {
 	std::vector<std::vector<double>> errors(topology.size());
 	int output_layer = topology.size() - 1;
@@ -232,7 +365,8 @@ std::vector<std::vector<double>> MatrixNeuralNetwork::BackProp(const std::vector
 	return errors;
 }
 
-void MatrixNeuralNetwork::UpdateWeights(const std::vector<std::vector<double>> &errors, const std::vector<std::vector<double>> &activations)
+void MatrixNeuralNetwork::UpdateWeights(const std::vector<std::vector<double>> &errors,
+                                        const std::vector<std::vector<double>> &activations)
 {
 	for (int i = 0; i < weights.size(); i++) {
 		for (int j = 0; j < weights[i].size(); j++) {

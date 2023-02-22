@@ -59,7 +59,7 @@ std::vector<double> DataSet::GetVectorAnswer(int rightClassNum) const
 	return answer;
 }
 
-void DataSet::MoveToTestSet(float movePercentage)
+void DataSet::MoveToValidationSet(float movePercentage)
 {
 	testSetSizeRatio = movePercentage;
 	int countToMove = (int)((float) trainTargets.size() * movePercentage);
@@ -111,7 +111,7 @@ void DataSet::Shuffle()
 
 	//std::cout <<  sw.Restart() << " shuffle complete" << std::endl;
 
-	MoveToTestSet(testSetSizeRatio);
+    MoveToValidationSet(testSetSizeRatio);
 
 	//std::cout <<  sw.Restart() << " move to test set complete" << std::endl;
 }
