@@ -208,18 +208,18 @@ int main()
 
 	std::vector<int> topology = { 784, 95, 75, 26 };
 	nnm.LoadMatrixNN(topology);
-	nnm.LoadWeightToNetwork("../NN_weights_784-151-75-26_epoch-3_accuracy-73.4865");
+	nnm.LoadWeightToNetwork("../NN_weights_784-500-405-26_epoch-17_accuracy-93.weights");
+	//nnm.LoadWeightToNetwork("../NN_weights_784-151-75-26_epoch-3_accuracy-73.4865");
 
 	nnm.SetValidationPartOfTrainingDataset(0.1);
-	nnm.LoadTrainSet(trainSetFileName, 784, 26, 1000);
+	nnm.LoadTrainSet(trainSetFileName, 784, 26, 100);
 
 	StopWatch sw;
-/*
 	sw.Start();
 	nnm.CalculateMetricsForTestSet(nnm.trainingSet->trainInputs,
-								   nnm.trainingSet->trainTargets,16);
+								   nnm.trainingSet->trainTargets,0);
 	std::cout << sw.Stop() << std::endl;
-	return 0;*/
+	return 0;
 
 
 

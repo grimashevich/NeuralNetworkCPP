@@ -146,11 +146,15 @@ void NeuralNetworkManager::CalculateMetricsForTestSet(const std::vector<std::vec
 													  const std::vector<std::vector<double>> & testTargets,
 													  size_t threadsNum)
 {
-	size_t dataSetSize = testInputs.size();
+	if (threadsNum <= 0)
+	{
+	  threadsNum = std::thread::hardware_concurrency();
+	}
+  	size_t dataSetSize = testInputs.size();
 	std::vector<std::thread> threads;
 	std::vector<std::vector<std::vector<size_t>>> results(
 			threadsNum,std::vector<std::vector<size_t>>(
-					testTargets[0].size(), std::vector<size_t>(2)));
+					testTargets[0].size(), std::vector<size_t>(testTargets[0].size())));
 
     std::mutex m;
 	size_t pieceSize = dataSetSize / threadsNum;
@@ -175,24 +179,72 @@ void NeuralNetworkManager::CalculateMetricsForTestSet(const std::vector<std::vec
 	for (int i = 0; i < threadsNum; ++i)
 		threads[i].join();
 
-	std::vector<std::vector<size_t>> finalResult(std::vector<std::vector<size_t>>(testTargets[0].size(), std::vector<size_t>(2)));
-	size_t totalRight = 0;
-	size_t totalWrong = 0;
-	for (int i = 0; i < results.size(); ++i)
+	std::vector<std::vector<size_t>> finalResult(std::vector<std::vector<size_t>>(testTargets[0].size(),
+		std::vector<size_t>(testTargets[0].size(), 0)));
+	for (int i = 0; i < results.size(); ++i) //threads result
 	{
-		for (int j = 0; j < results[i].size(); ++j)
+		for (int j = 0; j < results[i].size(); ++j) // true classes
 		{
-			finalResult[j][0] += results[i][j][0];
-			finalResult[j][1] += results[i][j][1];
-			totalRight += results[i][j][0];
-			totalWrong += results[i][j][1];
+            for (int k = 0; k < results[i][j].size(); ++k) //predicted classes
+            {
+                finalResult[j][k] += results[i][j][k];
+            }
 		}
 	}
-    accuracy = (float)totalRight / (float)(totalRight + totalWrong);
+    print_matrix(finalResult);
+}
 
-/*    std::cout << "Total wrong: " << totalWrong << std::endl;
-    std::cout << "Total right: " << totalRight << std::endl;
-    std::cout << "Accuracy: " << ((float)totalRight / (float)(totalRight + totalWrong)) * 100 << "%" << std::endl;*/
+void NeuralNetworkManager::print_matrix(const std::vector<std::vector<size_t>>& vec) {
+    size_t n = vec.size(); // размерность вектора
+
+    size_t WIDTH = 4;
+
+    // Вывод заголовка таблицы
+    std::cout << std::setw(WIDTH) << " ";
+    for (size_t j = 0; j < n; ++j) {
+        std::cout << std::setw(WIDTH) << (char) (j+65);
+    }
+    std::cout << std::setw(6) << "Sum";
+    std::cout << std::setw(4) << "TP";
+    std::cout << std::setw(4) << "FP" << std::endl;
+
+    // Вывод таблицы
+    for (size_t i = 0; i < n; ++i) {
+        size_t TP = 0;
+        std::cout << std::setw(WIDTH) << (char) (i+65);
+        size_t row_sum = 0;
+        for (size_t j = 0; j < n; ++j) {
+            std::cout << std::setw(WIDTH) << vec[i][j];
+            row_sum += vec[i][j];
+            if (i == j)
+                TP = vec[i][j];
+        }
+        std::cout << std::setw(6) << row_sum;
+        std::cout << std::setw(4) << TP;
+        std::cout << std::setw(4) << row_sum - TP << std::endl;
+    }
+}
+std::map<std::string, double> NeuralNetworkManager::GetConfusionMatrix(
+        const std::vector<std::vector<double>> & predict_matrix)
+{
+    std::map<std::string, double> result = std::map<std::string, double>();
+    double matrixSum = 0;
+
+    result["TP"] = 0;
+    result["TN"] = 0;
+    result["FP"] = 0;
+    result["FN"] = 0;
+
+    for (int i = 0; i < predict_matrix.size(); ++i) {
+        result["TP"] += predict_matrix[i][i];
+        matrixSum += std::accumulate(predict_matrix[i].begin(), predict_matrix[i].end(), 0.0);
+    }
+    result["TP"] /= (double) predict_matrix.size();
+    result["TN"] = result["TP"] * (double) (predict_matrix.size() - 1);
+    result["FP"] = matrixSum - result["TP"];
+    result["FN"] = result["FP"];
+
+    return result;
 }
 
 void NeuralNetworkManager::PredictMT(const std::vector<std::vector<double>> &inputs,
@@ -205,31 +257,15 @@ void NeuralNetworkManager::PredictMT(const std::vector<std::vector<double>> &inp
 									 NeuralNetworkBase *nn,
                                      std::mutex & m)
 {
-    float right = 0;
-    float wrong = 0;
     auto newLayers = nn->layers;
 	for (size_t i = fromIndex; i < toIndex; ++i)
 	{
         std::vector<double> answerVector = nn->PredictMT(inputs[i], newLayers);
 
-        size_t answer = std::max_element(answerVector.begin(),answerVector.end()) - answerVector.begin();
+        size_t nn_answer = std::max_element(answerVector.begin(), answerVector.end()) - answerVector.begin();
 		size_t true_answer = std::max_element(targets[i].begin(), targets[i].end()) - targets[i].begin();
-
-		if (answer == true_answer)
-        {
-			result[true_answer][0]++;
-            right++;
-        }
-		else
-        {
-			result[true_answer][1]++;
-            wrong++;
-        }
+		result[true_answer][nn_answer]++;
 	}
-/*    m.lock();
-    std::cout << "right/wrong " << right << "/" << wrong << " " <<
-            (right / (right + wrong)) * 100 << "%" <<std::endl;
-    m.unlock();*/
 }
 
 double NeuralNetworkManager::GetAccuracy() const
