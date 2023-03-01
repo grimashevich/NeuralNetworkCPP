@@ -19,28 +19,27 @@ public:
 	explicit MatrixNeuralNetwork(const std::vector<int>& Topology);
 	double Train(const std::vector<std::vector<double>>& inputs,
 				 const std::vector<std::vector<double>>& targets, int numEpochs) override;
-    double TrainOneBatch(const std::vector<std::vector<double>> &inputs,
-                         const std::vector<std::vector<double>> &targets, int batchStart,
-                         int batchSize, std::mutex &m) override;
 	std::vector<double> Predict(const std::vector<double>& input) override;
 	void SaveWeights(double accuracy, int epoch, std::string fName) override;
 	void LoadWeight(std::string fileName) override;
 
     std::vector<double> PredictMT(const std::vector<double>& input,
-                                  std::vector<std::vector<double>> & layersCopy);
+                                  std::vector<std::vector<double>> & layersCopy) override;
     std::vector<std::vector<double>> ForwardFeedMT(const std::vector<double>& input,
-                                                   std::vector<std::vector<double>> & layersCopy);
+                                                   std::vector<std::vector<double>> & layersCopy) override;
 
 	std::vector<std::vector<std::vector<double>>> weights;
 	std::vector<std::vector<double>> biases;
 	//std::vector<std::vector<double>> layers;
+
+	static std::vector<std::string> SplitString(const std::string& str, char sep);
 
 private:
 	std::vector<int> topology;
 
 	std::mt19937 generator;
 
-	static std::vector<std::string> SplitString(const std::string& str, char sep);
+
 	bool CheckTopology(const std::string& strTopology);
 	std::string GetFileNameForWeights(double  accuracy, int epoch);
 	void InitWeights();
@@ -53,20 +52,11 @@ private:
 
 	double GetMeanError(std::vector<double> & errors) const;
 
-    void addVectorValues(std::vector<std::vector<double>> &source, std::vector<std::vector<double>> &summation);
-
-    void divideEachElement(std::vector<std::vector<double>> &source, double divider);
-
     void ForwardFeedMTBatch(const std::vector<double> &input, std::vector<std::vector<double>> &sumLayersValue);
 
-    double
-    trainWithMiniBatches(const std::vector<std::vector<double>> &inputs,
-                         const std::vector<std::vector<double>> &targets,
-                         double batchSize, int threadsCount);
+	void calculateNeuronsThread(int layerNum, int startNeuron, int lastNeuron);
 
-    void TrainOneBatchLauncher(const std::vector<std::vector<double>> &inputs,
-                          const std::vector<std::vector<double>> &targets,
-                          int startFrom, int batchSize, int batchCount, std::mutex &m);
+	std::vector<std::vector<double>> ForwardFeedMT(const std::vector<double> &input, int threadsCount);
 };
 
 

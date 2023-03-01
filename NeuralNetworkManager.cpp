@@ -26,56 +26,6 @@ void NeuralNetworkManager::LoadMatrixNN(const std::vector<int> &topology)
 	}
 }
 
-double NeuralNetworkManager::GetAccuracy() const
-{
-	return accuracy;
-}
-
-double NeuralNetworkManager::getPrecision() const
-{
-	return precision;
-}
-
-double NeuralNetworkManager::getRecall() const
-{
-	return recall;
-}
-
-double NeuralNetworkManager::getFMeasure() const
-{
-	return fMeasure;
-}
-
-double NeuralNetworkManager::getError() const
-{
-	return error;
-}
-
-NeuralNetworkManager::~NeuralNetworkManager()
-{
-	delete neuralNetwork;
-	delete trainingSet;
-	delete testSet;
-}
-
-void NeuralNetworkManager::trainWithMiniBatches(double learningRate, double batchSize, int threadsCount)
-{
-	if (neuralNetwork == nullptr)
-		throw std::runtime_error("No neural network loaded for training");
-	if (trainingSet == nullptr || trainingSet->trainInputs.empty())
-		throw std::runtime_error("No training set loaded for training");
-	if ((int)((float)trainingSet->trainInputs.size() * validationPartOfTrainingDataset) <= 0)
-		throw std::runtime_error("There is not enough data in the training set to create a validation set.");
-
-	neuralNetwork->SetLearningRate(learningRate);
-	trainingSet->SetValidationPartRatio(validationPartOfTrainingDataset);
-	trainingSet->Shuffle();
-	double meanError = neuralNetwork->trainWithMiniBatches(trainingSet->trainInputs,
-                                                           trainingSet->trainTargets,
-                                                           batchSize, threadsCount);
-	error = meanError;
-	//todo update metrics
-}
 
 void NeuralNetworkManager::Train(int numEpochs, double learningRate)
 {
@@ -147,10 +97,24 @@ void NeuralNetworkManager::LoadTrainSet(std::string & fileName, size_t inputSize
 void NeuralNetworkManager::LoadWeightToNetwork(const std::string& fileName)
 {
     if (!fileExistAndReadable(fileName))
-        throw std::invalid_argument("Weights file not found " + fileName);
-	if (neuralNetwork == nullptr)
-		throw std::runtime_error("Neural network is not loaded");
+        throw std::invalid_argument("Weights file not found: " + fileName);
+	LoadMatrixNN(getTopologyFromWeightsFile(fileName));
 	neuralNetwork->LoadWeight(fileName);
+}
+
+std::vector<int> NeuralNetworkManager::getTopologyFromWeightsFile(const std::string &weightsFileName) {
+	std::ifstream weightsFile(weightsFileName);
+	std::string line;
+	std::vector<int> topology = std::vector<int>();
+	if (getline(weightsFile, line)) {
+		std::vector<std::string> weightsStr = MatrixNeuralNetwork::SplitString(line, ' ');
+		for (int i = 0; i < weightsStr.size(); ++i) {
+			topology.emplace_back(std::stoi(weightsStr[i]));
+		}
+	} else {
+		throw std::runtime_error("Can't read from file: " + weightsFileName);
+	}
+	return topology;
 }
 
 void NeuralNetworkManager::SaveWeightFromNetwork(double curAccuracy, size_t epochNum, const std::string& alterFileName)
@@ -225,6 +189,7 @@ void NeuralNetworkManager::CalculateMetricsForTestSet(const std::vector<std::vec
 		}
 	}
     accuracy = (float)totalRight / (float)(totalRight + totalWrong);
+
 /*    std::cout << "Total wrong: " << totalWrong << std::endl;
     std::cout << "Total right: " << totalRight << std::endl;
     std::cout << "Accuracy: " << ((float)totalRight / (float)(totalRight + totalWrong)) * 100 << "%" << std::endl;*/
@@ -267,3 +232,34 @@ void NeuralNetworkManager::PredictMT(const std::vector<std::vector<double>> &inp
     m.unlock();*/
 }
 
+double NeuralNetworkManager::GetAccuracy() const
+{
+	return accuracy;
+}
+
+double NeuralNetworkManager::getPrecision() const
+{
+	return precision;
+}
+
+double NeuralNetworkManager::getRecall() const
+{
+	return recall;
+}
+
+double NeuralNetworkManager::getFMeasure() const
+{
+	return fMeasure;
+}
+
+double NeuralNetworkManager::getError() const
+{
+	return error;
+}
+
+NeuralNetworkManager::~NeuralNetworkManager()
+{
+	delete neuralNetwork;
+	delete trainingSet;
+	delete testSet;
+}

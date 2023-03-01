@@ -206,12 +206,12 @@ int main()
 	//trainSetFileName = "../emnist-letters-test.csv";s
 
 
-	std::vector<int> topology = { 784, 100, 50, 26 };
+	std::vector<int> topology = { 784, 95, 75, 26 };
 	nnm.LoadMatrixNN(topology);
-	//nnm.LoadWeightToNetwork("../NN_weights_784-500-405-26_epoch-17_accuracy-93.weights");
+	nnm.LoadWeightToNetwork("../NN_weights_784-151-75-26_epoch-3_accuracy-73.4865");
 
 	nnm.SetValidationPartOfTrainingDataset(0.1);
-	nnm.LoadTrainSet(trainSetFileName, 784, 26, 5000);
+	nnm.LoadTrainSet(trainSetFileName, 784, 26, 1000);
 
 	StopWatch sw;
 /*
@@ -224,21 +224,21 @@ int main()
 
 
     nnm.CalculateMetricsForTestSet(nnm.trainingSet->trainInputs,
-                                   nnm.trainingSet->trainTargets,16);
+                                   nnm.trainingSet->trainTargets,4);
 
     std::cout << "Accuracy before learning: " << nnm.GetAccuracy() << std::endl;
 
 	//ОБУЧЕНИЕ
 	sw.Start();
 	//std::vector<double> learningRatios {0.09, 0.08, 0.07, 0.06, 0.05, 0.04, 0.03, 0.025, 0.02, 0.015};
-	std::vector<double> learningRatios {0.005, 0.004, 0.003};
+	std::vector<double> learningRatios {0.05, 0.04, 0.03};
 	for (int i = 0; i <learningRatios.size(); ++i)
 	{
-		//nnm.Train(1, learningRatios[i]);
-        nnm.trainWithMiniBatches(learningRatios[i], 1, 16);
+		nnm.Train(1, learningRatios[i]);
+        //nnm.trainWithMiniBatches(learningRatios[i], 1, 16);
 
         nnm.CalculateMetricsForTestSet(nnm.trainingSet->trainInputs,
-                                       nnm.trainingSet->trainTargets,16);
+                                       nnm.trainingSet->trainTargets,4);
 
 		std::cout << "Accuracy: " << nnm.GetAccuracy() << " in " << sw.Restart() << std::endl;
 	}

@@ -74,6 +74,8 @@ private:
     static bool fileExistAndReadable(const std::string &fileName);
 
 	void CrutchNormalzation(std::vector<double> & signal);
+
+	static std::vector<int> getTopologyFromWeightsFile(const std::string &weightsFileName);
 };
 
 

@@ -16,14 +16,6 @@ public:
 						 const std::vector<std::vector<double>>& targets,
 						 int numEpochs) = 0;
 
-    virtual double TrainOneBatch(const std::vector<std::vector<double>> &inputs,
-                                 const std::vector<std::vector<double>> &targets, int batchStart,
-                                 int batchSize, std::mutex &m) = 0;
-
-    virtual double trainWithMiniBatches(const std::vector<std::vector<double>> &inputs,
-                                                     const std::vector<std::vector<double>> &targets,
-                                                     double batchSize, int threadsCount) = 0;
-
 	virtual std::vector<double> Predict(const std::vector<double>& input) = 0;
 
     virtual std::vector<double> PredictMT(const std::vector<double>& input,
