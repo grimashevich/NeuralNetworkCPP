@@ -317,7 +317,7 @@ void NeuralNetworkManager::CrossValidation(size_t folds_count, double learning_r
         neuralNetwork->SetLearningRate(neuralNetwork->GetLearningRate() * learning_rate_ratio);
         trainingSet->ReturnTestSetToTrainSet();
         //TODO REMOVE IT
-        std::cout << ". ";
+        PrintMetrics();
         std::cout.flush();
         //TODO END REMOVE IT
     }
