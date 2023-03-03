@@ -200,7 +200,7 @@ int main()
     return 0;*/
 
 
-	NeuralNetworkManager nnm = NeuralNetworkManager();
+    NeuralNetworkManager nnm = NeuralNetworkManager();
 
 	std::string  trainSetFileName = "../emnist-letters-train.csv";
 	//trainSetFileName = "../emnist-letters-test.csv";s
@@ -211,8 +211,9 @@ int main()
 	nnm.LoadWeightToNetwork("../NN_weights_784-500-405-26_epoch-17_accuracy-93.weights");
 	//nnm.LoadWeightToNetwork("../NN_weights_784-151-75-26_epoch-3_accuracy-73.4865");
 
-	nnm.SetValidationPartOfTrainingDataset(0.1);
-	nnm.LoadTrainSet(trainSetFileName, 784, 26, 100);
+	nnm.SetValidationPartOfTrainingDataset(0.0);
+	nnm.LoadTrainSet(trainSetFileName, 784, 26, 10);
+    nnm.trainingSet->MoveToValidationSet(5, 10);
 
 	StopWatch sw;
 	sw.Start();

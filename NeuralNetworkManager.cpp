@@ -4,36 +4,32 @@
 
 #include "NeuralNetworkManager.h"
 
-NeuralNetworkManager::NeuralNetworkManager()
-{
+NeuralNetworkManager::NeuralNetworkManager() {
 
 }
 
-void NeuralNetworkManager::LoadMatrixNN(const std::vector<int> &topology)
-{
-	if (topology.size() < 3)
-		throw std::invalid_argument("Neural network must have minimum 3 layers");
-	delete neuralNetwork;
-	neuralNetwork = new MatrixNeuralNetwork(topology);
-	inputSizeNN = topology[0];
-	outputSizeNN = topology[topology.size() - 1];
-	if (trainingSet != nullptr && (trainingSet->GetInputSize() != inputSizeNN || trainingSet->GetOutputSize() != outputSizeNN))
-	{
-		delete trainingSet;
-		delete testSet;
-		trainingSet = nullptr;
-		testSet = nullptr;
-	}
+void NeuralNetworkManager::LoadMatrixNN(const std::vector<int> &topology) {
+    if (topology.size() < 3)
+        throw std::invalid_argument("Neural network must have minimum 3 layers");
+    delete neuralNetwork;
+    neuralNetwork = new MatrixNeuralNetwork(topology);
+    inputSizeNN = topology[0];
+    outputSizeNN = topology[topology.size() - 1];
+    if (trainingSet != nullptr && (trainingSet->GetInputSize() != inputSizeNN || trainingSet->GetOutputSize() != outputSizeNN)) {
+        delete trainingSet;
+        delete testSet;
+        trainingSet = nullptr;
+        testSet = nullptr;
+    }
 }
 
 
-void NeuralNetworkManager::Train(int numEpochs, double learningRate)
-{
+void NeuralNetworkManager::Train(int numEpochs, double learningRate) {
     if (neuralNetwork == nullptr)
         throw std::runtime_error("No neural network loaded for training");
     if (trainingSet == nullptr || trainingSet->trainInputs.empty())
         throw std::runtime_error("No training set loaded for training");
-    if ((int)((float)trainingSet->trainInputs.size() * validationPartOfTrainingDataset) <= 0)
+    if ((int) ((float) trainingSet->trainInputs.size() * validationPartOfTrainingDataset) <= 0)
         throw std::runtime_error("There is not enough data in the training set to create a validation set.");
 
     neuralNetwork->SetLearningRate(learningRate);
@@ -44,96 +40,90 @@ void NeuralNetworkManager::Train(int numEpochs, double learningRate)
     //todo update metrics
 }
 
-float NeuralNetworkManager::GetValidationPartOfTrainingDataset() const
-{
-	return validationPartOfTrainingDataset;
+float NeuralNetworkManager::GetValidationPartOfTrainingDataset() const {
+    return validationPartOfTrainingDataset;
 }
 
-void NeuralNetworkManager::SetValidationPartOfTrainingDataset(float newValue)
-{
-	if (newValue < 0 || newValue > 1)
-		throw std::invalid_argument("ValidationPartOfTrainingDataset value must be between 0 and 1");
-	NeuralNetworkManager::validationPartOfTrainingDataset = newValue;
+void NeuralNetworkManager::SetValidationPartOfTrainingDataset(float newValue) {
+    if (newValue < 0 || newValue > 1)
+        throw std::invalid_argument("ValidationPartOfTrainingDataset value must be between 0 and 1");
+    NeuralNetworkManager::validationPartOfTrainingDataset = newValue;
 }
 
-void NeuralNetworkManager::CrutchNormalzation(std::vector<double> &signal)
-{
-	//TODO Заменить на метод из Датасета
-	for (double & item: signal)
-	{
-		if (item > 64)
-			item = 1;
-		else
-			item = 0;
-	}
+void NeuralNetworkManager::CrutchNormalzation(std::vector<double> &signal) {
+    //TODO Заменить на метод из Датасета
+    for (double &item : signal) {
+        if (item > 64)
+            item = 1;
+        else
+            item = 0;
+    }
 }
 
 
-size_t NeuralNetworkManager::Predict(std::vector<double> inputSignal, int answerOffset, bool needNormalize)
-{
-	size_t result;
-	std::vector<double> networkAnswer;
+size_t NeuralNetworkManager::Predict(std::vector<double> inputSignal, int answerOffset, bool needNormalize) {
+    size_t result;
+    std::vector<double> networkAnswer;
 
-	if (needNormalize)
-		CrutchNormalzation(inputSignal);
-	networkAnswer = neuralNetwork->Predict(inputSignal);
-	result = std::max_element(networkAnswer.begin(),networkAnswer.end()) - networkAnswer.begin();
-	return result + answerOffset;
+    if (needNormalize)
+        CrutchNormalzation(inputSignal);
+    networkAnswer = neuralNetwork->Predict(inputSignal);
+    result = std::max_element(networkAnswer.begin(), networkAnswer.end()) - networkAnswer.begin();
+    return result + answerOffset;
 }
 
-void NeuralNetworkManager::LoadTrainSet(std::string & fileName, size_t inputSize, size_t outputSize, size_t objectLimit)
-{
-	if (inputSize && outputSize == 0)
-		throw std::invalid_argument("inputSize and outputSize should be positive");
-	if (!fileExistAndReadable(fileName))
-		throw std::invalid_argument("Dataset file not found " + fileName);
-	delete trainingSet;
-	trainingSet = new DataSet(inputSize, outputSize);
-	trainingSet->SetValidationPartRatio(validationPartOfTrainingDataset);
-	trainingSet->LoadFromCSV(fileName, ',', objectLimit, false);
+void NeuralNetworkManager::LoadTrainSet(std::string &fileName,
+                                        size_t inputSize,
+                                        size_t outputSize,
+                                        size_t objectLimit) {
+    if (inputSize && outputSize == 0)
+        throw std::invalid_argument("inputSize and outputSize should be positive");
+    if (!fileExistAndReadable(fileName))
+        throw std::invalid_argument("Dataset file not found " + fileName);
+    delete trainingSet;
+    trainingSet = new DataSet(inputSize, outputSize);
+    trainingSet->SetValidationPartRatio(validationPartOfTrainingDataset);
+    trainingSet->LoadFromCSV(fileName, ',', objectLimit, false);
     trainingSet->MoveToValidationSet(validationPartOfTrainingDataset);
 }
 
-void NeuralNetworkManager::LoadWeightToNetwork(const std::string& fileName)
-{
+void NeuralNetworkManager::LoadWeightToNetwork(const std::string &fileName) {
     if (!fileExistAndReadable(fileName))
         throw std::invalid_argument("Weights file not found: " + fileName);
-	LoadMatrixNN(getTopologyFromWeightsFile(fileName));
-	neuralNetwork->LoadWeight(fileName);
+    LoadMatrixNN(getTopologyFromWeightsFile(fileName));
+    neuralNetwork->LoadWeight(fileName);
 }
 
 std::vector<int> NeuralNetworkManager::getTopologyFromWeightsFile(const std::string &weightsFileName) {
-	std::ifstream weightsFile(weightsFileName);
-	std::string line;
-	std::vector<int> topology = std::vector<int>();
-	if (getline(weightsFile, line)) {
-		std::vector<std::string> weightsStr = MatrixNeuralNetwork::SplitString(line, ' ');
-		for (int i = 0; i < weightsStr.size(); ++i) {
-			topology.emplace_back(std::stoi(weightsStr[i]));
-		}
-	} else {
-		throw std::runtime_error("Can't read from file: " + weightsFileName);
-	}
-	return topology;
+    std::ifstream weightsFile(weightsFileName);
+    std::string line;
+    std::vector<int> topology = std::vector<int>();
+    if (getline(weightsFile, line)) {
+        std::vector<std::string> weightsStr = MatrixNeuralNetwork::SplitString(line, ' ');
+        for (int i = 0; i < weightsStr.size(); ++i) {
+            topology.emplace_back(std::stoi(weightsStr[i]));
+        }
+    } else {
+        throw std::runtime_error("Can't read from file: " + weightsFileName);
+    }
+    return topology;
 }
 
-void NeuralNetworkManager::SaveWeightFromNetwork(double curAccuracy, size_t epochNum, const std::string& alterFileName)
-{
-	if (neuralNetwork == nullptr)
-		throw std::runtime_error("Neural network is not loaded");
-	neuralNetwork->SaveWeights(curAccuracy, epochNum, alterFileName);
+void NeuralNetworkManager::SaveWeightFromNetwork(double curAccuracy,
+                                                 size_t epochNum,
+                                                 const std::string &alterFileName) {
+    if (neuralNetwork == nullptr)
+        throw std::runtime_error("Neural network is not loaded");
+    neuralNetwork->SaveWeights(curAccuracy, epochNum, alterFileName);
 }
 
-bool NeuralNetworkManager::fileExistAndReadable(const std::string &fileName)
-{
+bool NeuralNetworkManager::fileExistAndReadable(const std::string &fileName) {
     bool fileIsOk;
     fileIsOk = std::filesystem::exists(fileName);
     fileIsOk = fileIsOk && std::filesystem::is_regular_file(fileName);
-    if (fileIsOk)
-    {
+    if (fileIsOk) {
         std::ifstream file(fileName);
-        if (file.is_open())
-        {
+        if (file.is_open()) {
             file.close();
             return true;
         }
@@ -142,30 +132,27 @@ bool NeuralNetworkManager::fileExistAndReadable(const std::string &fileName)
     return false;
 }
 
-void NeuralNetworkManager::CalculateMetricsForTestSet(const std::vector<std::vector<double>> & testInputs,
-													  const std::vector<std::vector<double>> & testTargets,
-													  size_t threadsNum)
-{
-	if (threadsNum <= 0)
-	{
-	  threadsNum = std::thread::hardware_concurrency();
-	}
-  	size_t dataSetSize = testInputs.size();
-	std::vector<std::thread> threads;
-	std::vector<std::vector<std::vector<size_t>>> results(
-			threadsNum,std::vector<std::vector<size_t>>(
-					testTargets[0].size(), std::vector<size_t>(testTargets[0].size())));
+void NeuralNetworkManager::CalculateMetricsForTestSet(const std::vector<std::vector<double>> &testInputs,
+                                                      const std::vector<std::vector<double>> &testTargets,
+                                                      size_t threadsNum) {
+    if (threadsNum <= 0) {
+        threadsNum = std::thread::hardware_concurrency();
+    }
+    size_t dataSetSize = testInputs.size();
+    std::vector<std::thread> threads;
+    std::vector<std::vector<std::vector<size_t>>> results(
+            threadsNum, std::vector<std::vector<size_t>>(
+                    testTargets[0].size(), std::vector<size_t>(testTargets[0].size())));
 
     std::mutex m;
-	size_t pieceSize = dataSetSize / threadsNum;
-	for (int i = 0; i < threadsNum; ++i)
-	{
-		size_t fromIndex = (i * pieceSize);
-		size_t toIndex = ((i + 1) * pieceSize); //will be not included
-		if (i == threadsNum - 1)
-			toIndex = dataSetSize;
+    size_t pieceSize = dataSetSize / threadsNum;
+    for (int i = 0; i < threadsNum; ++i) {
+        size_t fromIndex = (i * pieceSize);
+        size_t toIndex = ((i + 1) * pieceSize); //will be not included
+        if (i == threadsNum - 1)
+            toIndex = dataSetSize;
 
-		threads.emplace_back(PredictMT,
+        threads.emplace_back(PredictMT,
                              testInputs,
                              testTargets,
                              fromIndex,
@@ -175,26 +162,37 @@ void NeuralNetworkManager::CalculateMetricsForTestSet(const std::vector<std::vec
                              std::ref(results[i]),
                              neuralNetwork,
                              std::ref(m));
-	}
-	for (int i = 0; i < threadsNum; ++i)
-		threads[i].join();
+    }
+    for (int i = 0; i < threadsNum; ++i)
+        threads[i].join();
 
-	std::vector<std::vector<size_t>> finalResult(std::vector<std::vector<size_t>>(testTargets[0].size(),
-		std::vector<size_t>(testTargets[0].size(), 0)));
-	for (int i = 0; i < results.size(); ++i) //threads result
-	{
-		for (int j = 0; j < results[i].size(); ++j) // true classes
-		{
+    std::vector<std::vector<size_t>> finalResult(std::vector<std::vector<size_t>>(testTargets[0].size(),
+                                                                                  std::vector<size_t>(testTargets[0].size(),
+                                                                                                      0)));
+    for (int i = 0; i < results.size(); ++i) //threads result
+    {
+        for (int j = 0; j < results[i].size(); ++j) // true classes
+        {
             for (int k = 0; k < results[i][j].size(); ++k) //predicted classes
             {
                 finalResult[j][k] += results[i][j][k];
             }
-		}
-	}
-    print_matrix(finalResult);
+        }
+    }
+    predict_matrix = finalResult;
+    //print_matrix(finalResult);
+    std::map<std::string, double> conf_matrix = GetConfusionMatrix(finalResult);
+    double TP = conf_matrix["TP"];
+    double TN = conf_matrix["TN"];
+    double FP = conf_matrix["FP"];
+    double FN = conf_matrix["FN"];
+    this->accuracy = (TP + TN) / (TP + TN + FP + FN);
+    this->precision = TP / (TP + FP);
+    this->recall = TP / (TP + FN);
+    this->fMeasure = 2 * (this->precision * this->recall) / (this->precision + this->recall);
 }
 
-void NeuralNetworkManager::print_matrix(const std::vector<std::vector<size_t>>& vec) {
+void NeuralNetworkManager::print_matrix(const std::vector<std::vector<size_t>> &vec) {
     size_t n = vec.size(); // размерность вектора
 
     size_t WIDTH = 4;
@@ -202,7 +200,7 @@ void NeuralNetworkManager::print_matrix(const std::vector<std::vector<size_t>>& 
     // Вывод заголовка таблицы
     std::cout << std::setw(WIDTH) << " ";
     for (size_t j = 0; j < n; ++j) {
-        std::cout << std::setw(WIDTH) << (char) (j+65);
+        std::cout << std::setw(WIDTH) << (char) (j + 65);
     }
     std::cout << std::setw(6) << "Sum";
     std::cout << std::setw(4) << "TP";
@@ -211,7 +209,7 @@ void NeuralNetworkManager::print_matrix(const std::vector<std::vector<size_t>>& 
     // Вывод таблицы
     for (size_t i = 0; i < n; ++i) {
         size_t TP = 0;
-        std::cout << std::setw(WIDTH) << (char) (i+65);
+        std::cout << std::setw(WIDTH) << (char) (i + 65);
         size_t row_sum = 0;
         for (size_t j = 0; j < n; ++j) {
             std::cout << std::setw(WIDTH) << vec[i][j];
@@ -224,9 +222,11 @@ void NeuralNetworkManager::print_matrix(const std::vector<std::vector<size_t>>& 
         std::cout << std::setw(4) << row_sum - TP << std::endl;
     }
 }
+
 std::map<std::string, double> NeuralNetworkManager::GetConfusionMatrix(
-        const std::vector<std::vector<double>> & predict_matrix)
+        const std::vector<std::vector<size_t>> &test_matrix)
 {
+
     std::map<std::string, double> result = std::map<std::string, double>();
     double matrixSum = 0;
 
@@ -235,12 +235,12 @@ std::map<std::string, double> NeuralNetworkManager::GetConfusionMatrix(
     result["FP"] = 0;
     result["FN"] = 0;
 
-    for (int i = 0; i < predict_matrix.size(); ++i) {
-        result["TP"] += predict_matrix[i][i];
-        matrixSum += std::accumulate(predict_matrix[i].begin(), predict_matrix[i].end(), 0.0);
+    for (int i = 0; i < test_matrix.size(); ++i) {
+        result["TP"] += (double) test_matrix[i][i];
+        matrixSum += std::accumulate(test_matrix[i].begin(), test_matrix[i].end(), 0.0);
     }
-    result["TP"] /= (double) predict_matrix.size();
-    result["TN"] = result["TP"] * (double) (predict_matrix.size() - 1);
+    result["TP"] /= (double) test_matrix.size();
+    result["TN"] = result["TP"] * (double) (test_matrix.size() - 1);
     result["FP"] = matrixSum - result["TP"];
     result["FN"] = result["FP"];
 
@@ -248,54 +248,76 @@ std::map<std::string, double> NeuralNetworkManager::GetConfusionMatrix(
 }
 
 void NeuralNetworkManager::PredictMT(const std::vector<std::vector<double>> &inputs,
-									 const std::vector<std::vector<double>> &targets,
-									 size_t fromIndex,
-									 size_t toIndex,
-									 int answerOffset,
-									 bool needNormalize,
-									 std::vector<std::vector<size_t>> & result,
-									 NeuralNetworkBase *nn,
-                                     std::mutex & m)
-{
+                                     const std::vector<std::vector<double>> &targets,
+                                     size_t fromIndex,
+                                     size_t toIndex,
+                                     int answerOffset,
+                                     bool needNormalize,
+                                     std::vector<std::vector<size_t>> &result,
+                                     NeuralNetworkBase *nn,
+                                     std::mutex &m) {
     auto newLayers = nn->layers;
-	for (size_t i = fromIndex; i < toIndex; ++i)
-	{
+    for (size_t i = fromIndex; i < toIndex; ++i) {
         std::vector<double> answerVector = nn->PredictMT(inputs[i], newLayers);
 
         size_t nn_answer = std::max_element(answerVector.begin(), answerVector.end()) - answerVector.begin();
-		size_t true_answer = std::max_element(targets[i].begin(), targets[i].end()) - targets[i].begin();
-		result[true_answer][nn_answer]++;
-	}
+        size_t true_answer = std::max_element(targets[i].begin(), targets[i].end()) - targets[i].begin();
+        result[true_answer][nn_answer]++;
+    }
 }
 
-double NeuralNetworkManager::GetAccuracy() const
-{
-	return accuracy;
+double NeuralNetworkManager::GetAccuracy() const {
+    return accuracy;
 }
 
-double NeuralNetworkManager::getPrecision() const
-{
-	return precision;
+double NeuralNetworkManager::getPrecision() const {
+    return precision;
 }
 
-double NeuralNetworkManager::getRecall() const
-{
-	return recall;
+double NeuralNetworkManager::getRecall() const {
+    return recall;
 }
 
-double NeuralNetworkManager::getFMeasure() const
-{
-	return fMeasure;
+double NeuralNetworkManager::getFMeasure() const {
+    return fMeasure;
 }
 
-double NeuralNetworkManager::getError() const
-{
-	return error;
+double NeuralNetworkManager::getError() const {
+    return error;
 }
 
-NeuralNetworkManager::~NeuralNetworkManager()
-{
-	delete neuralNetwork;
-	delete trainingSet;
-	delete testSet;
+NeuralNetworkManager::~NeuralNetworkManager() {
+    delete neuralNetwork;
+    delete trainingSet;
+    delete testSet;
 }
+
+void NeuralNetworkManager::CrossValidation(size_t folds_count)
+{
+    if (trainingSet == nullptr)
+        throw std::runtime_error("Training set is not loaded");
+    if (folds_count < 2)
+        throw std::runtime_error("folds_count must be >= 2");
+
+    trainingSet->ReturnTestSetToTrainSet();
+    double mean_accuracy = 0;
+    double mean_precision = 0;
+    double mean_recall = 0;
+    double mean_fMeasure = 0;
+    for (int i = 0; i < folds_count; ++i)
+    {
+        size_t fold_size = trainingSet->Size() / folds_count + (i < folds_count);
+        trainingSet->MoveToValidationSet(0, fold_size);
+        neuralNetwork->Train(trainingSet->trainInputs, trainingSet->trainTargets, 1);
+        CalculateMetricsForTestSet(trainingSet->validationInputs, trainingSet->validationTargets);
+        mean_accuracy += accuracy;
+        mean_precision += precision;
+        mean_recall += recall;
+        mean_fMeasure += fMeasure;
+    }
+    accuracy = mean_accuracy / (double) folds_count;
+    precision = mean_precision / (double) folds_count;
+    recall = mean_recall / (double) folds_count;
+    fMeasure = mean_fMeasure / (double) folds_count;
+}
+

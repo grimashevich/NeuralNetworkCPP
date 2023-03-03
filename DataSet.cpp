@@ -72,14 +72,35 @@ void DataSet::MoveToValidationSet(float movePercentage)
 		validationTargets.push_back(trainTargets[trainTargets.size() - 1]);
 		trainTargets.pop_back();
 	}
+}
 
-/*	for (int i = 0; i < countToMove; ++i)
-	{
-		validationInputs.push_back(trainInputs[i]);
-		validationTargets.push_back(trainTargets[i]);
-	}
-	trainInputs.erase(trainInputs.begin(), trainInputs.begin() + countToMove);
-	trainTargets.erase(trainTargets.begin(), trainTargets.begin() + countToMove);*/
+void DataSet::MoveToValidationSet(size_t start, size_t count)
+{
+    if (start >= trainInputs.size())
+        throw std::runtime_error("Start must be < data set size");
+    size_t upper_border = std::min(start + count, trainInputs.size());
+    for (size_t i = start; i < upper_border; ++i) {
+        validationInputs.push_back(trainInputs[i]);
+        validationTargets.push_back(trainTargets[i]);
+    }
+    auto delete_start = trainInputs.begin() + (long) start;
+    auto delete_end = trainInputs.begin() + (long) upper_border;
+    trainInputs.erase(delete_start, delete_end);
+
+    delete_start = trainTargets.begin() + (long) start;
+    delete_end = trainTargets.begin() + (long) upper_border;
+    trainTargets.erase(delete_start, delete_end);
+}
+
+void DataSet::ReturnTestSetToTrainSet()
+{
+    for (size_t i = 0; i < validationInputs.size(); ++i)
+    {
+        trainInputs.push_back(validationInputs[i]);
+        trainTargets.push_back(validationTargets[i]);
+    }
+    validationInputs.clear();
+    validationTargets.clear();
 }
 
 double DataSet::normalizeInput(double n, double limit)
@@ -115,18 +136,6 @@ void DataSet::Shuffle()
 
 	//std::cout <<  sw.Restart() << " move to test set complete" << std::endl;
 }
-
-void DataSet::ReturnTestSetToTrainSet()
-{
-	for (size_t i = 0; i < validationInputs.size(); ++i)
-	{
-		trainInputs.push_back(validationInputs[i]);
-		trainTargets.push_back(validationTargets[i]);
-	}
-	validationInputs.clear();
-	validationTargets.clear();
-}
-
 
 int DataSet::GetRandomNumber(int min, int max)
 {

@@ -14,7 +14,8 @@
 class NeuralNetworkManager
 {
 public:
-	DataSet *trainingSet = nullptr;
+	//TODO move to private
+    DataSet *trainingSet = nullptr;
 
 	NeuralNetworkManager();
 	void LoadMatrixNN(const std::vector<int> &topology);
@@ -42,8 +43,8 @@ public:
 						  NeuralNetworkBase *nn,
                           std::mutex & m);
 
-
-	~NeuralNetworkManager();
+    void CrossValidation(size_t folds_count);
+    ~NeuralNetworkManager();
 
 private:
 	int inputSizeNN = 0;
@@ -65,11 +66,13 @@ private:
 	double fMeasure = 0;
 	double error = 0;
 
+    std::vector<std::vector<size_t>> predict_matrix;
+
     static bool fileExistAndReadable(const std::string &fileName);
 	void CrutchNormalzation(std::vector<double> & signal);
 	static std::vector<int> getTopologyFromWeightsFile(const std::string &weightsFileName);
 
-  std::map<std::string, double> GetConfusionMatrix(const std::vector<std::vector<double>> &predict_matrix);
+  static std::map<std::string, double> GetConfusionMatrix(const std::vector<std::vector<size_t>> &test_matrix);
 
   static void print_matrix(const std::vector<std::vector<size_t>> &vec);
 };
