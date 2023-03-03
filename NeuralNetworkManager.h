@@ -35,7 +35,7 @@ public:
 	size_t Predict(std::vector<double> inputSignal, int answerOffset, bool needNormalize);
 	void CalculateMetricsForTestSet(const std::vector<std::vector<double>> &testInputs,
 									const std::vector<std::vector<double>> &testTargets,
-                                    size_t threadsNum = 2);
+                                    size_t threadsNum = 0);
 	static void PredictMT(const std::vector<std::vector<double>> &inputs,
 						  const std::vector<std::vector<double>> &targets,
 						  size_t fromIndex, size_t toIndex, int answerOffset,
@@ -43,7 +43,8 @@ public:
 						  NeuralNetworkBase *nn,
                           std::mutex & m);
 
-    void CrossValidation(size_t folds_count);
+    void CrossValidation(size_t folds_count, double learning_rate, double learning_rate_ratio);
+    void PrintMetrics() const;
     ~NeuralNetworkManager();
 
 private:

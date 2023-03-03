@@ -37,7 +37,7 @@ void NeuralNetworkManager::Train(int numEpochs, double learningRate) {
     trainingSet->Shuffle();
     double meanError = neuralNetwork->Train(trainingSet->trainInputs, trainingSet->trainTargets, numEpochs);
     error = meanError;
-    //todo update metrics
+    CalculateMetricsForTestSet(trainingSet->validationInputs, trainingSet->validationTargets);
 }
 
 float NeuralNetworkManager::GetValidationPartOfTrainingDataset() const {
@@ -239,7 +239,6 @@ std::map<std::string, double> NeuralNetworkManager::GetConfusionMatrix(
         result["TP"] += (double) test_matrix[i][i];
         matrixSum += std::accumulate(test_matrix[i].begin(), test_matrix[i].end(), 0.0);
     }
-    result["TP"] /= (double) test_matrix.size();
     result["TN"] = result["TP"] * (double) (test_matrix.size() - 1);
     result["FP"] = matrixSum - result["TP"];
     result["FN"] = result["FP"];
@@ -292,7 +291,7 @@ NeuralNetworkManager::~NeuralNetworkManager() {
     delete testSet;
 }
 
-void NeuralNetworkManager::CrossValidation(size_t folds_count)
+void NeuralNetworkManager::CrossValidation(size_t folds_count, double learning_rate, double learning_rate_ratio)
 {
     if (trainingSet == nullptr)
         throw std::runtime_error("Training set is not loaded");
@@ -300,13 +299,14 @@ void NeuralNetworkManager::CrossValidation(size_t folds_count)
         throw std::runtime_error("folds_count must be >= 2");
 
     trainingSet->ReturnTestSetToTrainSet();
+    neuralNetwork->SetLearningRate(learning_rate);
     double mean_accuracy = 0;
     double mean_precision = 0;
     double mean_recall = 0;
     double mean_fMeasure = 0;
     for (int i = 0; i < folds_count; ++i)
     {
-        size_t fold_size = trainingSet->Size() / folds_count + (i < folds_count);
+        size_t fold_size = trainingSet->Size() / folds_count + (i < trainingSet->Size() % folds_count);
         trainingSet->MoveToValidationSet(0, fold_size);
         neuralNetwork->Train(trainingSet->trainInputs, trainingSet->trainTargets, 1);
         CalculateMetricsForTestSet(trainingSet->validationInputs, trainingSet->validationTargets);
@@ -314,10 +314,29 @@ void NeuralNetworkManager::CrossValidation(size_t folds_count)
         mean_precision += precision;
         mean_recall += recall;
         mean_fMeasure += fMeasure;
+        neuralNetwork->SetLearningRate(neuralNetwork->GetLearningRate() * learning_rate_ratio);
+        trainingSet->ReturnTestSetToTrainSet();
+        //TODO REMOVE IT
+        std::cout << ". ";
+        std::cout.flush();
+        //TODO END REMOVE IT
     }
+    //TODO REMOVE IT
+    std::cout << std::endl;
+    //TODO END REMOVE IT
     accuracy = mean_accuracy / (double) folds_count;
     precision = mean_precision / (double) folds_count;
     recall = mean_recall / (double) folds_count;
     fMeasure = mean_fMeasure / (double) folds_count;
+}
+
+void NeuralNetworkManager::PrintMetrics() const {
+    std::ios_base::fmtflags old_flags = std::cout.flags();
+    std::cout << std::fixed << std::setprecision(4) << std::setfill('0');
+
+    std::cout << "accuracy: " << accuracy << " precision: " << precision << " recall: " <<
+        recall << " f-measure: " << fMeasure << std::endl;
+
+    std::cout.flags(old_flags);
 }
 
