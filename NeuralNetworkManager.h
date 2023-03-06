@@ -67,15 +67,20 @@ private:
 	double fMeasure = 0;
 	double error = 0;
 
-    std::vector<std::vector<size_t>> predict_matrix;
+    std::vector<std::vector<size_t>> predict_matrix; //Matrix of real model prediction
+    std::vector<std::map<std::string, double>> metrics;
 
     static bool fileExistAndReadable(const std::string &fileName);
 	void CrutchNormalzation(std::vector<double> & signal);
 	static std::vector<int> getTopologyFromWeightsFile(const std::string &weightsFileName);
 
-  static std::map<std::string, double> GetConfusionMatrix(const std::vector<std::vector<size_t>> &test_matrix);
+    static std::map<std::string,
+                      double> GetConfusionMatrix(const std::vector<std::vector<size_t>> &test_matrix,
+                                             int class_index);
 
-  static void print_matrix(const std::vector<std::vector<size_t>> &vec);
+    std::map<std::string , double> getMetricsMap(std::map<std::string , double> & confusion_matrix);
+
+    static void print_matrix(const std::vector<std::vector<size_t>> &vec);
 };
 
 

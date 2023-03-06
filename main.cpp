@@ -42,14 +42,14 @@ int main()
 	//trainSetFileName = "../emnist-letters-test.csv";s
 
 
-	std::vector<int> topology = { 784, 150, 75, 26 };
-	nnm.LoadMatrixNN(topology);
+	//std::vector<int> topology = { 784, 150, 75, 26 };
+	//nnm.LoadMatrixNN(topology);
 	//nnm.LoadWeightToNetwork("../NN_weights_784-500-405-26_epoch-17_accuracy-93.weights");
-	//nnm.LoadWeightToNetwork("../NN_weights_784-151-75-26_epoch-3_accuracy-73.4865");
+	nnm.LoadWeightToNetwork("../NN_weights_784-151-75-26_epoch-3_accuracy-73.4865");
 
     std::string  trainSetFileName = "../emnist-letters-train.csv";
-    nnm.SetValidationPartOfTrainingDataset(0.2);
-	nnm.LoadTrainSet(trainSetFileName, 784, 26, 10000);
+    nnm.SetValidationPartOfTrainingDataset(0.0);
+	nnm.LoadTrainSet(trainSetFileName, 784, 26, 2600);
 
     nnm.CalculateMetricsForTestSet(nnm.trainingSet->trainInputs, nnm.trainingSet->trainTargets);
     nnm.PrintMetrics();
@@ -112,6 +112,38 @@ int main()
 	}
 	std::cout << "- - - - -" << std::endl << "right: " << rightAnswers << " from " << totalTests << std::endl;
 	std::cout <<  "Done in " << sw.Stop() << std::endl;
+
+
+
+    /*
+       A   B   C   D   E   F   G   H   I   J   K   L   M   N   O   P   Q   R   S   T   U   V   W   X   Y   Z   Sum  TP  FP
+   A  71   1   0   0   0   0   1   2   0   0   1   0   2   6   6   0   7   0   0   1   1   0   0   0   0   1   100  71  29
+   B   5  77   0   0   0   0   1   0   0   0   0   0   0   0   3   0   3   0   0   1   0   0   0   0   1   2    93  77  16
+   C   0   3  95   0   3   0   0   0   0   0   0   0   0   0   2   0   0   2   0   3   1   0   0   0   0   2   111  95  16
+   D   2   4   0  80   0   0   1   0   0   1   0   0   0   1   4   1   1   0   0   1   1   0   0   0   2   0    99  80  19
+   E   6   3  15   0  65   1   0   0   0   0   0   0   0   3   2   0   0   1   0   1   0   1   0   0   0   2   100  65  35
+   F   2   1   1   0   0  65   2   0   1   0   0   0   0   0   0   9   0   2   0   6   0   0   1   0   0   2    92  65  27
+   G   4   3   1   2   0   0  51   0   1   0   0   0   0   1   1   2  10   1   1   2   0   0   0   0   6   0    86  51  35
+   H   4   4   0   1   0   0   0  74   2   0   1   0   0  10   0   0   0   2   0   1   3   0   1   0   1   1   105  74  31
+   I   1   1   1   1   0   0   0   0  71   1   0  16   0   0   0   0   0   0   0   0   0   0   0   1   0   1    94  71  23
+   J   0   1   1   3   0   0   2   0   4  77   0   0   0   0   0   0   0   0   1   5   0   0   0   0   2   1    97  77  20
+   K   2   0   1   1   0   0   0   3   3   0  70   0   0   4   0   1   0   2   0   1   4   0   1   1   0   0    94  70  24
+   L   0   2   3   0   0   0   0   0  47   0   0  61   0   0   0   0   0   1   0   1   1   0   0   1   0   0   117  61  56
+   M   4   0   0   0   0   0   0   0   0   0   1   0  84  12   0   0   1   0   0   1   2   0   0   0   0   1   106  84  22
+   N   5   0   0   0   0   0   1   1   0   0   3   0   0  78   0   0   0   0   0   0   6   2   0   1   2   0    99  78  21
+   O   2   1   0   2   0   0   0   0   0   0   0   0   0   1  90   0   2   0   0   0   1   0   0   0   0   0    99  90   9
+   P   1   0   0   0   0   2   1   0   0   0   0   0   0   1   0  76   1   3   0   0   0   0   0   0   3   0    88  76  12
+   Q  16   0   1   1   0   4  19   0   1   0   1   0   0   0   3   2  46   0   0   0   1   0   0   0   7   2   104  46  58
+   R  11   1   0   0   3   1   0   1   0   0   2   0   0   0   1   1   1  69   0   2   0   0   0   2   4   2   101  69  32
+   S   6   4   0   0   1   1  10   0   0   1   0   0   0   0   1   0   2   0  83   0   0   0   0   0   0   0   109  83  26
+   T   0   1   0   0   0   1   0   0   1   0   0   0   0   0   0   0   1   1   0  97   0   0   0   0   2   1   105  97   8
+   U   1   0   0   0   0   0   1   0   0   0   2   0   0   3   0   0   0   0   0   0 106   3   0   0   2   0   118 106  12
+   V   0   0   0   1   0   0   0   1   0   0   3   0   1   2   0   0   0   0   0   3   6  82   0   0   6   0   105  82  23
+   W   2   0   1   1   0   0   0   0   1   0   2   0   0   4   1   0   0   0   0   0   3   2  91   0   0   0   108  91  17
+   X   3   0   0   0   0   0   0   0   0   0   2   0   0   0   0   0   0   0   0   0   0   2   0  66   3   2    78  66  12
+   Y   1   1   0   0   0   0   2   0   2   0   0   0   1   0   0   0   0   1   0   3   0   3   0   0  86   0   100  86  14
+   Z   1   2   1   0   0   0   1   0   0   0   1   0   0   0   0   0   2   0   0   2   0   0   0   1   0  81    92  81  11
+     * */
 
 
 }

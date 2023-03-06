@@ -180,17 +180,30 @@ void NeuralNetworkManager::CalculateMetricsForTestSet(const std::vector<std::vec
         }
     }
     predict_matrix = finalResult;
-    //print_matrix(finalResult);
-    std::map<std::string, double> conf_matrix = GetConfusionMatrix(finalResult);
-    double TP = conf_matrix["TP"];
-    double TN = conf_matrix["TN"];
-    double FP = conf_matrix["FP"];
-    double FN = conf_matrix["FN"];
-    this->accuracy = (TP + TN) / (TP + TN + FP + FN);
-    this->precision = TP / (TP + FP);
-    this->recall = TP / (TP + FN);
-    this->fMeasure = 2 * (this->precision * this->recall) / (this->precision + this->recall);
+    print_matrix(finalResult);
+
+    std::map<std::string, double> mean_metrics = std::map<std::string, double>();
+    mean_metrics.emplace("accuracy", 0);
+    mean_metrics.emplace("precision", 0);
+    mean_metrics.emplace("recall", 0);
+    mean_metrics.emplace("f-measure", 0);
+    metrics.clear();
+    for (int i = 0; i < predict_matrix.size(); ++i) {
+        std::map<std::string, double> confusion_matrix = GetConfusionMatrix(finalResult, 0);
+        std::map<std::string, double> metricsMap = getMetricsMap(confusion_matrix);
+        metrics.emplace_back(metricsMap);
+        mean_metrics["accuracy"] += metricsMap["accuracy"];
+        mean_metrics["precision"] += metricsMap["precision"];
+        mean_metrics["recall"] += metricsMap["recall"];
+        mean_metrics["f-measure"] += metricsMap["f-measure"];
+    }
+    mean_metrics["accuracy"] /= (double) predict_matrix.size();
+    mean_metrics["precision"] /= (double) predict_matrix.size();
+    mean_metrics["recall"] /= (double) predict_matrix.size();
+    mean_metrics["f-measure"] /= (double) predict_matrix.size();
 }
+
+
 
 void NeuralNetworkManager::print_matrix(const std::vector<std::vector<size_t>> &vec) {
     size_t n = vec.size(); // размерность вектора
@@ -224,26 +237,41 @@ void NeuralNetworkManager::print_matrix(const std::vector<std::vector<size_t>> &
 }
 
 std::map<std::string, double> NeuralNetworkManager::GetConfusionMatrix(
-        const std::vector<std::vector<size_t>> &test_matrix)
+        const std::vector<std::vector<size_t>> &test_matrix, int class_index)
 {
 
     std::map<std::string, double> result = std::map<std::string, double>();
     double matrixSum = 0;
 
-    result["TP"] = 0;
+    result["TP"] = (double) test_matrix[class_index][class_index];
     result["TN"] = 0;
     result["FP"] = 0;
     result["FN"] = 0;
-
     for (int i = 0; i < test_matrix.size(); ++i) {
-        result["TP"] += (double) test_matrix[i][i];
-        matrixSum += std::accumulate(test_matrix[i].begin(), test_matrix[i].end(), 0.0);
+        if (i != class_index)
+        {
+            result["TN"] += (double) test_matrix[i][i];
+            result["FP"] += (double) test_matrix[i][class_index];
+            result["FN"] += (double) test_matrix[class_index][i];
+        }
     }
-    result["TN"] = result["TP"] * (double) (test_matrix.size() - 1);
-    result["FP"] = matrixSum - result["TP"];
-    result["FN"] = result["FP"];
 
     return result;
+}
+
+std::map<std::string, double> NeuralNetworkManager::getMetricsMap(std::map<std::string, double> & confusion_matrix) {
+    std::map<std::string, double> metricsMap = std::map<std::string, double>();
+    double TP = confusion_matrix["TP"];
+    double TN = confusion_matrix["TN"];
+    double FP = confusion_matrix["FP"];
+    double FN = confusion_matrix["FN"];
+
+    metricsMap.emplace("accuracy", (TP + TN) / (TP + TN + FP + FN));
+    metricsMap.emplace("precision", TP / (TP + FP));
+    metricsMap.emplace("recall", TP / (TP + FN));
+    metricsMap.emplace("f-measure", 2 * metricsMap["precision"] * metricsMap["recall"]
+            / (metricsMap["precision"] + metricsMap["recall"]));
+    return metricsMap;
 }
 
 void NeuralNetworkManager::PredictMT(const std::vector<std::vector<double>> &inputs,
@@ -339,4 +367,5 @@ void NeuralNetworkManager::PrintMetrics() const {
 
     std::cout.flags(old_flags);
 }
+
 
