@@ -27,14 +27,62 @@ void RandomCrossVal()
     std::cout << std::endl;
 }
 
+
+void metrics_test() {
+    NeuralNetworkManager nnm = NeuralNetworkManager();
+    std::vector<std::vector<size_t>> testVector = std::vector<std::vector<size_t>>();
+    testVector.emplace_back(std::vector<size_t>() = {6, 2, 5});
+    testVector.emplace_back(std::vector<size_t>() = {9, 3, 4});
+    testVector.emplace_back(std::vector<size_t>() = {1, 6, 8});
+
+    nnm.CalculateMetrics(testVector);
+    exit(0);
+}
+
+std::string getLetter(std::vector<double> & vector) {
+    int i = 0;
+    while (vector[i] != 1.0) {
+        i++;
+    }
+    char c = i + 65;
+    std::string s = std::string(1, c);
+    return s;
+}
+
+void paintLetterFromDataSet()
+{
+    NeuralNetworkManager nnm = NeuralNetworkManager();
+    std::string  trainSetFileName = "../emnist-letters-train.csv";
+    nnm.SetValidationPartOfTrainingDataset(0.0);
+    nnm.LoadTrainSet(trainSetFileName, 784, 26, 100);
+
+    for (int i = 0; i < nnm.trainingSet->trainInputs.size(); ++i) {
+        for (int j = 0; j < nnm.trainingSet->trainInputs[i].size(); ++j) {
+            if (j % 28 == 0)
+                std::cout << std::endl;
+            std::string s = "  ";
+            if (nnm.trainingSet->trainInputs[i][j] == 1.0)
+                s = "██";
+            std::cout << s << " ";
+        }
+        std::cout << std::endl;
+        std::cout << "THIS IS: " << getLetter(nnm.trainingSet->trainTargets[i]) << std::endl;
+        std::cout << std::endl << "- - - - - " << std::endl;
+    }
+}
+
+
 int main()
 {
+    //metrics_test();
+
 
 /*    for (int i = 0; i < 20; ++i) {
         RandomCrossVal();
     }
     return 0;*/
 
+    paintLetterFromDataSet();
 
     NeuralNetworkManager nnm = NeuralNetworkManager();
 
@@ -44,14 +92,18 @@ int main()
 
 	//std::vector<int> topology = { 784, 150, 75, 26 };
 	//nnm.LoadMatrixNN(topology);
-	//nnm.LoadWeightToNetwork("../NN_weights_784-500-405-26_epoch-17_accuracy-93.weights");
-	nnm.LoadWeightToNetwork("../NN_weights_784-151-75-26_epoch-3_accuracy-73.4865");
+	nnm.LoadWeightToNetwork("../NN_weights_784-500-405-26_epoch-17_accuracy-93.weights");
+	//nnm.LoadWeightToNetwork("../NN_weights_784-151-75-26_epoch-3_accuracy-73.4865");
 
     std::string  trainSetFileName = "../emnist-letters-train.csv";
     nnm.SetValidationPartOfTrainingDataset(0.0);
-	nnm.LoadTrainSet(trainSetFileName, 784, 26, 2600);
+	nnm.LoadTrainSet(trainSetFileName, 784, 26, 100);
+
+
+
 
     nnm.CalculateMetricsForTestSet(nnm.trainingSet->trainInputs, nnm.trainingSet->trainTargets);
+    return 0;
     nnm.PrintMetrics();
     nnm.CrossValidation(10, 0.05, 0.9);
     std::cout << "Mean metrics:" << std::endl;
@@ -59,7 +111,7 @@ int main()
 
     std::cout << "Actual metrics:" << std::endl;
     nnm.trainingSet->Shuffle();
-    nnm.CalculateMetricsForTestSet(nnm.trainingSet->trainInputs, nnm.trainingSet->trainTargets);
+    nnm.CalculateMetricsForTestSet(nnm.trainingSet->validationInputs, nnm.trainingSet->validationTargets);
     nnm.PrintMetrics();
     return 0;
 

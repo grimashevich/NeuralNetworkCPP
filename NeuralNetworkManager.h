@@ -47,6 +47,8 @@ public:
     void PrintMetrics() const;
     ~NeuralNetworkManager();
 
+    void CalculateMetrics(std::vector<std::vector<size_t>> &predicted_matrix);
+
 private:
 	int inputSizeNN = 0;
 	int outputSizeNN = 0;
