@@ -82,7 +82,7 @@ int main()
     }
     return 0;*/
 
-    paintLetterFromDataSet();
+    //paintLetterFromDataSet();
 
     NeuralNetworkManager nnm = NeuralNetworkManager();
 
@@ -92,27 +92,28 @@ int main()
 
 	//std::vector<int> topology = { 784, 150, 75, 26 };
 	//nnm.LoadMatrixNN(topology);
-	nnm.LoadWeightToNetwork("../NN_weights_784-500-405-26_epoch-17_accuracy-93.weights");
-	//nnm.LoadWeightToNetwork("../NN_weights_784-151-75-26_epoch-3_accuracy-73.4865");
+	//nnm.LoadWeightToNetwork("../NN_weights_784-500-405-26_epoch-17_accuracy-93.weights");
+	nnm.LoadWeightToNetwork("../NN_weights_784-151-75-26_epoch-3_accuracy-73.4865");
 
     std::string  trainSetFileName = "../emnist-letters-train.csv";
     nnm.SetValidationPartOfTrainingDataset(0.0);
-	nnm.LoadTrainSet(trainSetFileName, 784, 26, 100);
+	nnm.LoadTrainSet(trainSetFileName, 784, 26, 0);
 
 
 
 
     nnm.CalculateMetricsForTestSet(nnm.trainingSet->trainInputs, nnm.trainingSet->trainTargets);
+    nnm.printMetrics();
     return 0;
-    nnm.PrintMetrics();
+    nnm.printMetrics();
     nnm.CrossValidation(10, 0.05, 0.9);
     std::cout << "Mean metrics:" << std::endl;
-    nnm.PrintMetrics();
+    nnm.printMetrics();
 
     std::cout << "Actual metrics:" << std::endl;
     nnm.trainingSet->Shuffle();
     nnm.CalculateMetricsForTestSet(nnm.trainingSet->validationInputs, nnm.trainingSet->validationTargets);
-    nnm.PrintMetrics();
+    nnm.printMetrics();
     return 0;
 
 	StopWatch sw;
@@ -127,7 +128,7 @@ int main()
     nnm.CalculateMetricsForTestSet(nnm.trainingSet->trainInputs,
                                    nnm.trainingSet->trainTargets,4);
 
-    std::cout << "Accuracy before learning: " << nnm.GetAccuracy() << std::endl;
+    std::cout << "Accuracy before learning: " << nnm.getAccuracy() << std::endl;
 
 	//ОБУЧЕНИЕ
 	sw.Start();
@@ -141,7 +142,7 @@ int main()
         nnm.CalculateMetricsForTestSet(nnm.trainingSet->trainInputs,
                                        nnm.trainingSet->trainTargets,4);
 
-		std::cout << "Accuracy: " << nnm.GetAccuracy() << " in " << sw.Restart() << std::endl;
+		std::cout << "Accuracy: " << nnm.getAccuracy() << " in " << sw.Restart() << std::endl;
 	}
 
 

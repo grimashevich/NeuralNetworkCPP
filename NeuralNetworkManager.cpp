@@ -5,7 +5,8 @@
 #include "NeuralNetworkManager.h"
 
 NeuralNetworkManager::NeuralNetworkManager() {
-
+    mean_metrics = std::map<std::string, double>();
+    resetMeanMetrics();
 }
 
 void NeuralNetworkManager::LoadMatrixNN(const std::vector<int> &topology) {
@@ -185,18 +186,12 @@ void NeuralNetworkManager::CalculateMetricsForTestSet(const std::vector<std::vec
 }
 
 void NeuralNetworkManager::CalculateMetrics(std::vector<std::vector<size_t>> &predicted_matrix) {
-    std::map<std::string, double> mean_metrics = std::map<std::string, double>();
-    mean_metrics.emplace("accuracy", 0);
-    mean_metrics.emplace("precision", 0);
-    mean_metrics.emplace("recall", 0);
-    mean_metrics.emplace("f-measure", 0);
-    metrics.clear();
+    resetMeanMetrics();
     for (int i = 0; i < predicted_matrix.size(); ++i) {
         std::map<std::string, double> confusion_matrix = GetConfusionMatrix(predicted_matrix, i);
         std::map<std::string, double> metricsMap = getMetricsMap(confusion_matrix);
         metrics.emplace_back(metricsMap);
         mean_metrics["accuracy"] += metricsMap["accuracy"];
-        double acc = metricsMap["accuracy"];
         mean_metrics["precision"] += metricsMap["precision"];
         mean_metrics["recall"] += metricsMap["recall"];
         mean_metrics["f-measure"] += metricsMap["f-measure"];
@@ -295,20 +290,20 @@ void NeuralNetworkManager::PredictMT(const std::vector<std::vector<double>> &inp
     }
 }
 
-double NeuralNetworkManager::GetAccuracy() const {
-    return accuracy;
+double NeuralNetworkManager::getAccuracy() const {
+    return mean_metrics.at("accuracy");
 }
 
 double NeuralNetworkManager::getPrecision() const {
-    return precision;
+    return mean_metrics.at("precision");
 }
 
 double NeuralNetworkManager::getRecall() const {
-    return recall;
+    return mean_metrics.at("recall");
 }
 
 double NeuralNetworkManager::getFMeasure() const {
-    return fMeasure;
+    return mean_metrics.at("f-measure");
 }
 
 double NeuralNetworkManager::getError() const {
@@ -340,33 +335,42 @@ void NeuralNetworkManager::CrossValidation(size_t folds_count, double learning_r
         trainingSet->MoveToValidationSet(0, fold_size);
         neuralNetwork->Train(trainingSet->trainInputs, trainingSet->trainTargets, 1);
         CalculateMetricsForTestSet(trainingSet->validationInputs, trainingSet->validationTargets);
-        mean_accuracy += accuracy;
-        mean_precision += precision;
-        mean_recall += recall;
-        mean_fMeasure += fMeasure;
+        mean_accuracy += this->getAccuracy();
+        mean_precision += this->getPrecision();
+        mean_recall += this->getRecall();
+        mean_fMeasure += this->getFMeasure();
         neuralNetwork->SetLearningRate(neuralNetwork->GetLearningRate() * learning_rate_ratio);
         trainingSet->ReturnTestSetToTrainSet();
         //TODO REMOVE IT
-        PrintMetrics();
+        printMetrics();
         std::cout.flush();
         //TODO END REMOVE IT
     }
     //TODO REMOVE IT
     std::cout << std::endl;
     //TODO END REMOVE IT
-    accuracy = mean_accuracy / (double) folds_count;
-    precision = mean_precision / (double) folds_count;
-    recall = mean_recall / (double) folds_count;
-    fMeasure = mean_fMeasure / (double) folds_count;
+    resetMeanMetrics();
+    mean_metrics["accuracy"] = mean_accuracy / (double) folds_count;
+    mean_metrics["precision"] = mean_precision / (double) folds_count;
+    mean_metrics["recall"] = mean_recall / (double) folds_count;
+    mean_metrics["f-measure"] = mean_fMeasure / (double) folds_count;
 }
 
-void NeuralNetworkManager::PrintMetrics() const {
+void NeuralNetworkManager::printMetrics() const {
     std::ios_base::fmtflags old_flags = std::cout.flags();
     std::cout << std::fixed << std::setprecision(4) << std::setfill('0');
 
-    std::cout << "accuracy: " << accuracy << " precision: " << precision << " recall: " <<
-        recall << " f-measure: " << fMeasure << std::endl;
+    std::cout << "accuracy: " << getAccuracy() << " precision: " << getPrecision() << " recall: " <<
+        getRecall() << " f-measure: " << getFMeasure() << std::endl;
 
     std::cout.flags(old_flags);
+}
+
+void NeuralNetworkManager::resetMeanMetrics() {
+    mean_metrics.clear();
+    mean_metrics.emplace("accuracy", 0);
+    mean_metrics.emplace("precision", 0);
+    mean_metrics.emplace("recall", 0);
+    mean_metrics.emplace("f-measure", 0);
 }
 

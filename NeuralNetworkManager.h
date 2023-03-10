@@ -20,7 +20,7 @@ public:
 	NeuralNetworkManager();
 	void LoadMatrixNN(const std::vector<int> &topology);
 	void LoadGraphNN();
-	double GetAccuracy() const;
+	double getAccuracy() const;
 	double getPrecision() const;
 	double getRecall() const;
 	double getFMeasure() const;
@@ -44,8 +44,8 @@ public:
                           std::mutex & m);
 
     void CrossValidation(size_t folds_count, double learning_rate, double learning_rate_ratio);
-    void PrintMetrics() const;
     ~NeuralNetworkManager();
+    void printMetrics() const;
 
     void CalculateMetrics(std::vector<std::vector<size_t>> &predicted_matrix);
 
@@ -63,6 +63,7 @@ private:
 	size_t trainDatasetObjectLimit = 0;
 
 	// Metrics
+    std::map<std::string, double> mean_metrics;
 	double accuracy = 0;
 	double precision = 0;
 	double recall = 0;
@@ -83,6 +84,7 @@ private:
     std::map<std::string , double> getMetricsMap(std::map<std::string , double> & confusion_matrix);
 
     static void print_matrix(const std::vector<std::vector<size_t>> &vec);
+    void resetMeanMetrics();
 };
 
 
