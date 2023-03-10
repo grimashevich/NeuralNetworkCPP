@@ -73,7 +73,7 @@ size_t NeuralNetworkManager::Predict(std::vector<double> inputSignal, int answer
     return result + answerOffset;
 }
 
-void NeuralNetworkManager::LoadTrainSet(std::string &fileName,
+void NeuralNetworkManager::LoadTrainSet(std::string fileName,
                                         size_t inputSize,
                                         size_t outputSize,
                                         size_t objectLimit) {
@@ -181,7 +181,9 @@ void NeuralNetworkManager::CalculateMetricsForTestSet(const std::vector<std::vec
         }
     }
     predict_matrix = finalResult;
+    //TODO REMOVE IT
     print_matrix(finalResult);
+    //TODO END REMOVE IT
     CalculateMetrics(finalResult);
 }
 
@@ -205,7 +207,7 @@ void NeuralNetworkManager::CalculateMetrics(std::vector<std::vector<size_t>> &pr
 void NeuralNetworkManager::print_matrix(const std::vector<std::vector<size_t>> &vec) {
     size_t n = vec.size(); // размерность вектора
 
-    size_t WIDTH = 4;
+    size_t WIDTH = 5;
 
     // Вывод заголовка таблицы
     std::cout << std::setw(WIDTH) << " ";
@@ -213,8 +215,8 @@ void NeuralNetworkManager::print_matrix(const std::vector<std::vector<size_t>> &
         std::cout << std::setw(WIDTH) << (char) (j + 65);
     }
     std::cout << std::setw(6) << "Sum";
-    std::cout << std::setw(4) << "TP";
-    std::cout << std::setw(4) << "FP" << std::endl;
+    std::cout << std::setw(6) << "TP";
+    std::cout << std::setw(6) << "FP" << std::endl;
 
     // Вывод таблицы
     for (size_t i = 0; i < n; ++i) {
@@ -228,8 +230,8 @@ void NeuralNetworkManager::print_matrix(const std::vector<std::vector<size_t>> &
                 TP = vec[i][j];
         }
         std::cout << std::setw(6) << row_sum;
-        std::cout << std::setw(4) << TP;
-        std::cout << std::setw(4) << row_sum - TP << std::endl;
+        std::cout << std::setw(6) << TP;
+        std::cout << std::setw(6) << row_sum - TP << std::endl;
     }
 }
 
@@ -241,10 +243,16 @@ std::map<std::string, double> NeuralNetworkManager::getMetricsMap(std::map<std::
     double FN = confusion_matrix["FN"];
 
     metricsMap.emplace("accuracy", (TP + TN) / (TP + TN + FP + FN));
-    metricsMap.emplace("precision", TP / (TP + FP));
-    metricsMap.emplace("recall", TP / (TP + FN));
-    metricsMap.emplace("f-measure", 2 * metricsMap["precision"] * metricsMap["recall"]
-            / (metricsMap["precision"] + metricsMap["recall"]));
+    if (TP == 0) {
+        metricsMap.emplace("precision", 0);
+        metricsMap.emplace("recall", 0);
+        metricsMap.emplace("f-measure", 0);
+    } else {
+        metricsMap.emplace("precision", TP / (TP + FP));
+        metricsMap.emplace("recall", TP / (TP + FN));
+        metricsMap.emplace("f-measure", 2 * metricsMap["precision"] * metricsMap["recall"]
+                / (metricsMap["precision"] + metricsMap["recall"]));
+    }
     return metricsMap;
 }
 
@@ -349,11 +357,15 @@ void NeuralNetworkManager::CrossValidation(size_t folds_count, double learning_r
     //TODO REMOVE IT
     std::cout << std::endl;
     //TODO END REMOVE IT
+    printMetrics();
+    std::cout << "░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░" << std::endl;
+    std::cout << std::endl;
     resetMeanMetrics();
-    mean_metrics["accuracy"] = mean_accuracy / (double) folds_count;
-    mean_metrics["precision"] = mean_precision / (double) folds_count;
-    mean_metrics["recall"] = mean_recall / (double) folds_count;
-    mean_metrics["f-measure"] = mean_fMeasure / (double) folds_count;
+    cv_mean_metrics = mean_metrics;
+    cv_mean_metrics["accuracy"] = mean_accuracy / (double) folds_count;
+    cv_mean_metrics["precision"] = mean_precision / (double) folds_count;
+    cv_mean_metrics["recall"] = mean_recall / (double) folds_count;
+    cv_mean_metrics["f-measure"] = mean_fMeasure / (double) folds_count;
 }
 
 void NeuralNetworkManager::printMetrics() const {

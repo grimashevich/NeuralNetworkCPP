@@ -8,12 +8,12 @@
 
 void RandomCrossVal()
 {
-    int max_neuron_count = 500;
+    int max_neuron_count = 150;
     int min_neuron_count = 26;
 
     std::vector<int> topology = { 784 };
     DataSet rnd = DataSet(1, 1);
-    int hiddenLayersCount = rnd.GetRandomNumber(2, 5);
+    int hiddenLayersCount = rnd.GetRandomNumber(1, 1);
 
     int last_layer = max_neuron_count;
     for (int i = 0; i < hiddenLayersCount; ++i) {
@@ -21,10 +21,19 @@ void RandomCrossVal()
         topology.emplace_back(last_layer);
     }
     topology.emplace_back(26);
+    double learning_rate = rnd.GetRandomNumber(1, 100) / 100.0;
+    double learning_rate_ratio = rnd.GetRandomNumber(5, 10) / 10.0;
     for (int i : topology) {
         std::cout << i << " ";
     }
-    std::cout << std::endl;
+    std::cout << "LR:" << learning_rate << " LRR: " << learning_rate_ratio << std::endl;
+    std::cout << "- - - - - - - - - - - - - - - - - - - - - - - - - - -" << std::endl << std::endl;
+
+    NeuralNetworkManager network_manager = NeuralNetworkManager();
+    network_manager.LoadMatrixNN(topology);
+    network_manager.LoadTrainSet("../emnist-letters-train.csv", 28 * 28, 26, 5000);
+
+    network_manager.CrossValidation(10, learning_rate, learning_rate_ratio);
 }
 
 
@@ -77,10 +86,10 @@ int main()
     //metrics_test();
 
 
-/*    for (int i = 0; i < 20; ++i) {
+    for (int i = 0; i < 20; ++i) {
         RandomCrossVal();
     }
-    return 0;*/
+    return 0;
 
     //paintLetterFromDataSet();
 

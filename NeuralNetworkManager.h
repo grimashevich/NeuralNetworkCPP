@@ -16,6 +16,7 @@ class NeuralNetworkManager
 public:
 	//TODO move to private
     DataSet *trainingSet = nullptr;
+    DataSet *testSet = nullptr;
 
 	NeuralNetworkManager();
 	void LoadMatrixNN(const std::vector<int> &topology);
@@ -27,7 +28,7 @@ public:
 	double getError() const;
 	float GetValidationPartOfTrainingDataset() const;
 	void SetValidationPartOfTrainingDataset(float newValue);
-	void LoadTrainSet(std::string & fileName, size_t inputSize, size_t outputSize, size_t objectLimit = 0);
+	void LoadTrainSet(std::string fileName, size_t inputSize, size_t outputSize, size_t objectLimit = 0);
 	void Train(int numEpochs, double learningRate);
     void trainWithMiniBatches(double learningRate, double batchSize, int threadsCount);
 	void LoadWeightToNetwork(const std::string& fileName);
@@ -56,18 +57,13 @@ private:
 	//Neural network and datasets
 	NeuralNetworkBase *neuralNetwork = nullptr;
 
-	DataSet *testSet = nullptr;
-
 	//Training and dataset setting
 	float validationPartOfTrainingDataset = 0.2;
 	size_t trainDatasetObjectLimit = 0;
 
 	// Metrics
     std::map<std::string, double> mean_metrics;
-	double accuracy = 0;
-	double precision = 0;
-	double recall = 0;
-	double fMeasure = 0;
+    std::map<std::string, double> cv_mean_metrics;
 	double error = 0;
 
     std::vector<std::vector<size_t>> predict_matrix; //Matrix of real model prediction
