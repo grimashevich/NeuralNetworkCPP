@@ -24,7 +24,7 @@ public:
 	double getAccuracy() const;
 	double getPrecision() const;
 	double getRecall() const;
-	double getFMeasure() const;
+	double getFscore() const;
 	double getError() const;
 	float GetValidationPartOfTrainingDataset() const;
 	void SetValidationPartOfTrainingDataset(float newValue);
@@ -46,7 +46,7 @@ public:
 
     void CrossValidation(size_t folds_count, double learning_rate, double learning_rate_ratio);
     ~NeuralNetworkManager();
-    void printMetrics() const;
+    void printMetrics(std::string time) const;
 
     void CalculateMetrics(std::vector<std::vector<size_t>> &predicted_matrix);
 

@@ -8,12 +8,14 @@
 
 void RandomCrossVal()
 {
-    int max_neuron_count = 150;
+    int max_neuron_count = 500;
     int min_neuron_count = 26;
+    std::stringstream weight_file_name;
+    weight_file_name << "cv_";
 
     std::vector<int> topology = { 784 };
     DataSet rnd = DataSet(1, 1);
-    int hiddenLayersCount = rnd.GetRandomNumber(1, 1);
+    int hiddenLayersCount = rnd.GetRandomNumber(2, 5);
 
     int last_layer = max_neuron_count;
     for (int i = 0; i < hiddenLayersCount; ++i) {
@@ -21,19 +23,26 @@ void RandomCrossVal()
         topology.emplace_back(last_layer);
     }
     topology.emplace_back(26);
-    double learning_rate = rnd.GetRandomNumber(1, 100) / 100.0;
-    double learning_rate_ratio = rnd.GetRandomNumber(5, 10) / 10.0;
+    double learning_rate = rnd.GetRandomNumber(10, 100) / 1000.0;
+    double learning_rate_ratio = rnd.GetRandomNumber(50, 100) / 100.0;
+    std::cout << "{ ";
     for (int i : topology) {
         std::cout << i << " ";
+        weight_file_name << i << "_";
     }
+    std::cout << "} ";
     std::cout << "LR:" << learning_rate << " LRR: " << learning_rate_ratio << std::endl;
     std::cout << "- - - - - - - - - - - - - - - - - - - - - - - - - - -" << std::endl << std::endl;
 
     NeuralNetworkManager network_manager = NeuralNetworkManager();
     network_manager.LoadMatrixNN(topology);
-    network_manager.LoadTrainSet("../emnist-letters-train.csv", 28 * 28, 26, 5000);
+    network_manager.LoadTrainSet("../emnist-letters-train.csv", 28 * 28, 26, 0);
 
     network_manager.CrossValidation(10, learning_rate, learning_rate_ratio);
+
+    weight_file_name << "_f-score_" << network_manager.getFscore() << ".weights";
+    network_manager.SaveWeightFromNetwork(0,0,weight_file_name.str());
+    std::cout << "weights_saved :" << weight_file_name.str() << std::endl;
 }
 
 
@@ -86,7 +95,7 @@ int main()
     //metrics_test();
 
 
-    for (int i = 0; i < 20; ++i) {
+    for (int i = 0; i < 1000; ++i) {
         RandomCrossVal();
     }
     return 0;
@@ -112,17 +121,17 @@ int main()
 
 
     nnm.CalculateMetricsForTestSet(nnm.trainingSet->trainInputs, nnm.trainingSet->trainTargets);
-    nnm.printMetrics();
+    nnm.printMetrics("");
     return 0;
-    nnm.printMetrics();
+    nnm.printMetrics("");
     nnm.CrossValidation(10, 0.05, 0.9);
     std::cout << "Mean metrics:" << std::endl;
-    nnm.printMetrics();
+    nnm.printMetrics("");
 
     std::cout << "Actual metrics:" << std::endl;
     nnm.trainingSet->Shuffle();
     nnm.CalculateMetricsForTestSet(nnm.trainingSet->validationInputs, nnm.trainingSet->validationTargets);
-    nnm.printMetrics();
+    nnm.printMetrics("");
     return 0;
 
 	StopWatch sw;

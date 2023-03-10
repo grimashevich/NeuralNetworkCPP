@@ -182,7 +182,7 @@ void NeuralNetworkManager::CalculateMetricsForTestSet(const std::vector<std::vec
     }
     predict_matrix = finalResult;
     //TODO REMOVE IT
-    print_matrix(finalResult);
+    //print_matrix(finalResult);
     //TODO END REMOVE IT
     CalculateMetrics(finalResult);
 }
@@ -242,7 +242,11 @@ std::map<std::string, double> NeuralNetworkManager::getMetricsMap(std::map<std::
     double FP = confusion_matrix["FP"];
     double FN = confusion_matrix["FN"];
 
-    metricsMap.emplace("accuracy", (TP + TN) / (TP + TN + FP + FN));
+    if (TP + TN + FP + FN == 0) {
+        metricsMap.emplace("accuracy", 0);
+    } else {
+        metricsMap.emplace("accuracy", (TP + TN) / (TP + TN + FP + FN));
+    }
     if (TP == 0) {
         metricsMap.emplace("precision", 0);
         metricsMap.emplace("recall", 0);
@@ -310,7 +314,7 @@ double NeuralNetworkManager::getRecall() const {
     return mean_metrics.at("recall");
 }
 
-double NeuralNetworkManager::getFMeasure() const {
+double NeuralNetworkManager::getFscore() const {
     return mean_metrics.at("f-measure");
 }
 
@@ -336,9 +340,15 @@ void NeuralNetworkManager::CrossValidation(size_t folds_count, double learning_r
     double mean_accuracy = 0;
     double mean_precision = 0;
     double mean_recall = 0;
-    double mean_fMeasure = 0;
+    double mean_fScore = 0;
+
+    StopWatch sw = StopWatch();
+    sw.Start();
+
     for (int i = 0; i < folds_count; ++i)
     {
+
+
         size_t fold_size = trainingSet->Size() / folds_count + (i < trainingSet->Size() % folds_count);
         trainingSet->MoveToValidationSet(0, fold_size);
         neuralNetwork->Train(trainingSet->trainInputs, trainingSet->trainTargets, 1);
@@ -346,34 +356,37 @@ void NeuralNetworkManager::CrossValidation(size_t folds_count, double learning_r
         mean_accuracy += this->getAccuracy();
         mean_precision += this->getPrecision();
         mean_recall += this->getRecall();
-        mean_fMeasure += this->getFMeasure();
+        mean_fScore += this->getFscore();
         neuralNetwork->SetLearningRate(neuralNetwork->GetLearningRate() * learning_rate_ratio);
         trainingSet->ReturnTestSetToTrainSet();
+
         //TODO REMOVE IT
-        printMetrics();
+        if (i < 10)
+            std::cout << "0";
+        std::cout << i + 1 << ". ";
+        printMetrics(sw.Restart());
         std::cout.flush();
         //TODO END REMOVE IT
     }
     //TODO REMOVE IT
     std::cout << std::endl;
     //TODO END REMOVE IT
-    printMetrics();
+    printMetrics("");
     std::cout << "░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░" << std::endl;
     std::cout << std::endl;
-    resetMeanMetrics();
     cv_mean_metrics = mean_metrics;
     cv_mean_metrics["accuracy"] = mean_accuracy / (double) folds_count;
     cv_mean_metrics["precision"] = mean_precision / (double) folds_count;
     cv_mean_metrics["recall"] = mean_recall / (double) folds_count;
-    cv_mean_metrics["f-measure"] = mean_fMeasure / (double) folds_count;
+    cv_mean_metrics["f-measure"] = mean_fScore / (double) folds_count;
 }
 
-void NeuralNetworkManager::printMetrics() const {
+void NeuralNetworkManager::printMetrics(std::string time) const {
     std::ios_base::fmtflags old_flags = std::cout.flags();
     std::cout << std::fixed << std::setprecision(4) << std::setfill('0');
 
     std::cout << "accuracy: " << getAccuracy() << " precision: " << getPrecision() << " recall: " <<
-        getRecall() << " f-measure: " << getFMeasure() << std::endl;
+              getRecall() << " f-measure: " << getFscore() << " in " << time << std::endl;
 
     std::cout.flags(old_flags);
 }
